@@ -3,40 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time SMS Dashboard</title>
+    <title>PRIME PANEL</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>📱 Real-Time SMS Monitoring</h1>
-            <div class="stats">
-                <div class="stat-box">
-                    <span class="stat-label">Total Users</span>
-                    <span id="totalUsers" class="stat-value">0</span>
+    <!-- Verification Screen -->
+    <div id="verificationScreen" class="verification-screen">
+        <div class="verification-card">
+            <h1>🔐 PRIME PANEL</h1>
+            <p class="subtitle">Real-Time SMS Monitoring System</p>
+            
+            <div class="steps">
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <span class="step-text">Join Channel</span>
                 </div>
-                <div class="stat-box">
-                    <span class="stat-label">Online</span>
-                    <span id="onlineUsers" class="stat-value">0</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">New SMS</span>
-                    <span id="newSms" class="stat-value">0</span>
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <span class="step-text">Verify & Enter</span>
                 </div>
             </div>
-            <div class="controls">
-                <button id="refreshBtn" onclick="fetchAllData()">🔄 Refresh All</button>
-                <span id="lastUpdate" class="last-update">Last update: Never</span>
-            </div>
-        </header>
 
-        <div id="loadingIndicator" class="loading" style="display:none;">
-            <div class="spinner"></div>
-            <p>Loading data...</p>
+            <div class="telegram-section">
+                <p class="join-text">To access PRIME PANEL, please join our Telegram channel first.</p>
+                <a href="https://t.me/ailootertrick" target="_blank" class="telegram-btn">
+                    Join @ailootertrick
+                </a>
+                <p class="verify-text">After joining, come back and click Verify.</p>
+                <button id="verifyBtn" class="verify-btn" onclick="verifyAccess()">
+                    ✅ Verify
+                </button>
+            </div>
         </div>
+    </div>
 
-        <div id="userGrid" class="user-grid">
-            <!-- Users will be rendered here -->
+    <!-- Main Dashboard -->
+    <div id="mainDashboard" class="main-dashboard" style="display:none;">
+        <div class="container">
+            <!-- Header -->
+            <header>
+                <h1>📱 PRIME PANEL</h1>
+                <div class="stats">
+                    <div class="stat-box online-box">
+                        <span class="stat-value" id="onlineCount">0</span>
+                        <span class="stat-label">ONLINE</span>
+                    </div>
+                    <div class="stat-box sms-box">
+                        <span class="stat-value" id="smsCount">0</span>
+                        <span class="stat-label">NEW SMS</span>
+                    </div>
+                </div>
+                
+                <!-- Toggle -->
+                <div class="toggle-section">
+                    <button id="toggleBtn" class="toggle-btn active" onclick="toggleDevices()">
+                        <span class="toggle-icon">📱</span>
+                        All Devices
+                    </button>
+                    <button id="toggleBtnOnline" class="toggle-btn" onclick="toggleDevices()">
+                        <span class="toggle-icon">🟢</span>
+                        Online Only
+                    </button>
+                </div>
+
+                <div class="controls">
+                    <span id="lastUpdate" class="last-update">Last update: Never</span>
+                    <button id="refreshBtn" onclick="fetchAllData()">🔄 Refresh</button>
+                </div>
+            </header>
+
+            <!-- Global Message Feed -->
+            <section class="feed-section">
+                <h2>🌐 Global Message Feed</h2>
+                <div id="messageFeed" class="message-feed">
+                    <div class="placeholder">Waiting for messages...</div>
+                </div>
+            </section>
+
+            <!-- Devices Grid -->
+            <section class="devices-section">
+                <h2 id="devicesTitle">📱 All Devices</h2>
+                <div id="loadingIndicator" class="loading" style="display:none;">
+                    <div class="spinner"></div>
+                    <p>Loading devices...</p>
+                </div>
+                <div id="devicesGrid" class="devices-grid">
+                    <!-- Devices will be rendered here -->
+                </div>
+            </section>
         </div>
     </div>
 
