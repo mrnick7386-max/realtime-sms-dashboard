@@ -7,38 +7,8 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Verification Screen -->
-    <div id="verificationScreen" class="verification-screen">
-        <div class="verification-card">
-            <h1>🔐 PRIME PANEL</h1>
-            <p class="subtitle">Real-Time SMS Monitoring System</p>
-            
-            <div class="steps">
-                <div class="step">
-                    <span class="step-number">1</span>
-                    <span class="step-text">Join Channel</span>
-                </div>
-                <div class="step">
-                    <span class="step-number">2</span>
-                    <span class="step-text">Verify & Enter</span>
-                </div>
-            </div>
-
-            <div class="telegram-section">
-                <p class="join-text">To access PRIME PANEL, please join our Telegram channel first.</p>
-                <a href="https://t.me/ailootertrick" target="_blank" class="telegram-btn">
-                    Join @ailootertrick
-                </a>
-                <p class="verify-text">After joining, come back and click Verify.</p>
-                <button id="verifyBtn" class="verify-btn" onclick="verifyAccess()">
-                    ✅ Verify
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Dashboard -->
-    <div id="mainDashboard" class="main-dashboard" style="display:none;">
+    <!-- Main Dashboard - Direct Access -->
+    <div id="mainDashboard" class="main-dashboard">
         <div class="container">
             <!-- Header -->
             <header>
@@ -67,7 +37,7 @@
                 </div>
 
                 <div class="controls">
-                    <span id="lastUpdate" class="last-update">Last update: Never</span>
+                    <span id="lastUpdate" class="last-update">Loading data...</span>
                     <button id="refreshBtn" onclick="fetchAllData()">🔄 Refresh</button>
                 </div>
             </header>
@@ -76,7 +46,7 @@
             <section class="feed-section">
                 <h2>🌐 Global Message Feed</h2>
                 <div id="messageFeed" class="message-feed">
-                    <div class="placeholder">Waiting for messages...</div>
+                    <div class="placeholder">Loading messages...</div>
                 </div>
             </section>
 
