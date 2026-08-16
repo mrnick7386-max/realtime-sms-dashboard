@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time SMS Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📱 Real-Time SMS Monitoring</h1>
+            <div class="stats">
+                <div class="stat-box">
+                    <span class="stat-label">Total Users</span>
+                    <span id="totalUsers" class="stat-value">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Online</span>
+                    <span id="onlineUsers" class="stat-value">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">New SMS</span>
+                    <span id="newSms" class="stat-value">0</span>
+                </div>
+            </div>
+            <div class="controls">
+                <button id="refreshBtn" onclick="fetchAllData()">🔄 Refresh All</button>
+                <span id="lastUpdate" class="last-update">Last update: Never</span>
+            </div>
+        </header>
+
+        <div id="loadingIndicator" class="loading" style="display:none;">
+            <div class="spinner"></div>
+            <p>Loading data...</p>
+        </div>
+
+        <div id="userGrid" class="user-grid">
+            <!-- Users will be rendered here -->
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
