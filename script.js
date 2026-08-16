@@ -3,34 +3,15 @@ const API_BASE = 'https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatab
 const USERS_URL = `${API_BASE}/users.json?shallow=true`;
 
 let allUsers = {};
-let filteredUsers = {};
 let showOnlyOnline = false;
 let refreshInterval = null;
 let feedMessages = [];
-let verified = false;
-
-// === Verification ===
-function verifyAccess() {
-    const btn = document.getElementById('verifyBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Verifying...';
-    
-    // Simulate verification (in reality, you'd check Telegram membership)
-    setTimeout(() => {
-        verified = true;
-        document.getElementById('verificationScreen').style.display = 'none';
-        document.getElementById('mainDashboard').style.display = 'block';
-        fetchAllData();
-        startAutoRefresh();
-    }, 1500);
-}
 
 // === Toggle Function ===
 function toggleDevices() {
     const allBtn = document.getElementById('toggleBtn');
     const onlineBtn = document.getElementById('toggleBtnOnline');
     
-    // Toggle active state
     if (showOnlyOnline) {
         showOnlyOnline = false;
         allBtn.classList.add('active');
@@ -198,7 +179,6 @@ function renderDevices() {
     loading.style.display = 'none';
     grid.innerHTML = '';
 
-    // Filter users
     const usersToShow = showOnlyOnline 
         ? Object.fromEntries(Object.entries(allUsers).filter(([id, data]) => isUserOnline(data)))
         : allUsers;
@@ -225,7 +205,6 @@ function renderMessageFeed() {
         return;
     }
 
-    // Show last 50 messages
     const recentMessages = feedMessages.slice(0, 50);
     feed.innerHTML = recentMessages.map(msg => `
         <div class="feed-item">
@@ -283,7 +262,6 @@ async function fetchAllData() {
             }
         });
 
-        // Update allUsers
         allUsers = newUsers;
 
         // Update message feed
@@ -300,11 +278,9 @@ async function fetchAllData() {
                 }
             });
         }
-        // Sort messages by timestamp (newest first)
         newMessages.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         feedMessages = newMessages;
 
-        // Render everything
         renderMessageFeed();
         renderDevices();
         updateStats();
@@ -313,7 +289,7 @@ async function fetchAllData() {
         console.error('Error fetching data:', error);
         grid.innerHTML = `
             <div class="no-devices">
-                ❌ Error loading data: ${error.message}
+                ❌ Error: ${error.message}
                 <br><br>
                 <button onclick="fetchAllData()" style="background:rgba(79,195,247,0.15);color:#4fc3f7;border:1px solid rgba(79,195,247,0.3);padding:8px 20px;border-radius:8px;cursor:pointer;">Retry</button>
             </div>
@@ -331,13 +307,20 @@ function startAutoRefresh() {
     refreshInterval = setInterval(fetchAllData, 30000);
 }
 
-// === Initialize ===
+// === Auto-Load on Page Load ===
 document.addEventListener('DOMContentLoaded', () => {
-    // Show verification screen by default
-    document.getElementById('verificationScreen').style.display = 'flex';
-    document.getElementById('mainDashboard').style.display = 'none';
+    // Load data immediately
+    fetchAllData();
+    startAutoRefresh();
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+        }
+    });
 });
 
-window.verifyAccess = verifyAccess;
+// Make functions globally accessible
 window.toggleDevices = toggleDevices;
 window.fetchAllData = fetchAllData;
