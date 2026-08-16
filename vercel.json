@@ -1,24 +1,5 @@
 {
   "version": 2,
-  "name": "prime-panel-direct",
-  "builds": [
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.css",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.js",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ]
+  "name": "prime-panel",
+  "routes": [{ "src": "/(.*)", "dest": "/index.html" }]
 }
