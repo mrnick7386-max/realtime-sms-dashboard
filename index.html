@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CATShadow · Firebase Panel</title>
+    <title>CATShadow · Realtime Firebase Panel</title>
     <style>
         * {
             margin: 0;
@@ -32,13 +32,27 @@
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
+            gap: 12px;
         }
-        h1 small {
+        h1 .badge-group {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
             font-size: 1rem;
+        }
+        h1 .badge-group small {
             color: #7a9ab5;
             background: #1a2530;
             padding: 6px 16px;
             border-radius: 30px;
+        }
+        h1 .badge-group .online-badge {
+            color: #7fdb9a;
+            background: #1a2a22;
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: 1px solid #2a5a3a;
         }
         .panel-grid {
             display: grid;
@@ -52,9 +66,18 @@
             padding: 16px 8px 8px 16px;
             overflow-y: auto;
             border: 1px solid #253544;
+            display: flex;
+            flex-direction: column;
         }
-        .user-list input {
-            width: 100%;
+        .user-list .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .user-list .controls input {
+            flex: 1;
+            min-width: 120px;
             background: #0f171f;
             border: 1px solid #2d4050;
             color: #d4e0f0;
@@ -62,11 +85,39 @@
             border-radius: 30px;
             font-family: inherit;
             font-size: 0.9rem;
-            margin-bottom: 16px;
             outline: none;
         }
-        .user-list input:focus {
+        .user-list .controls input:focus {
             border-color: #4a7a9c;
+        }
+        .user-list .controls .toggle-online {
+            background: #1a2530;
+            border: 1px solid #2d4050;
+            color: #b0c8dd;
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .user-list .controls .toggle-online.active {
+            background: #1a3a2a;
+            border-color: #4a9a6a;
+            color: #7fdb9a;
+        }
+        .user-list .controls .toggle-online:hover {
+            background: #1f3140;
+        }
+        .user-counts {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #6a8aa5;
+            padding: 0 14px 12px 14px;
+            border-bottom: 1px solid #1f2e3a;
+            margin-bottom: 12px;
         }
         .user-item {
             padding: 8px 14px;
@@ -77,6 +128,9 @@
             transition: 0.15s;
             border-left: 3px solid transparent;
             word-break: break-all;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .user-item:hover {
             background: #1d2a36;
@@ -87,12 +141,18 @@
             border-left-color: #8fcbff;
             color: #b6defa;
         }
-        .user-count {
-            font-size: 0.75rem;
-            color: #6a8aa5;
-            padding: 0 14px 12px 14px;
-            border-bottom: 1px solid #1f2e3a;
-            margin-bottom: 12px;
+        .user-item .online-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #2a4a3a;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+        .user-item .online-dot.online {
+            background: #4fdb7a;
+            box-shadow: 0 0 8px #4fdb7a66;
         }
         .detail-panel {
             background: #131b24;
@@ -193,6 +253,14 @@
             padding: 40px 0;
             font-style: italic;
         }
+        .status-bar {
+            font-size: 0.7rem;
+            color: #4a6a85;
+            padding: 6px 0 0 0;
+            text-align: right;
+            border-top: 1px solid #1a2530;
+            margin-top: 8px;
+        }
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -209,7 +277,7 @@
                 height: auto;
             }
             .user-list {
-                max-height: 300px;
+                max-height: 350px;
             }
             .detail-panel {
                 max-height: 600px;
@@ -220,18 +288,28 @@
 <body>
 <div class="container">
     <h1>
-        🐟 CATShadow · Firebase Panel
-        <small id="totalUsers">loading users…</small>
+        🐟 CATShadow · Realtime Panel
+        <span class="badge-group">
+            <small id="totalUsers">⏳ loading…</small>
+            <span class="online-badge" id="onlineCount">🟢 0 online</span>
+        </span>
     </h1>
     <div class="panel-grid">
-        <!-- LEFT: user list -->
+        <!-- LEFT -->
         <div class="user-list" id="userListContainer">
-            <input type="text" id="searchInput" placeholder="🔍 filter users…" oninput="filterUsers()">
-            <div class="user-count" id="userCount">0 users</div>
-            <div id="userItems"></div>
+            <div class="controls">
+                <input type="text" id="searchInput" placeholder="🔍 filter users…" oninput="filterUsers()">
+                <button class="toggle-online" id="onlineToggle" onclick="toggleOnlineFilter()">🟢 Online Only</button>
+            </div>
+            <div class="user-counts">
+                <span id="userCount">0 users</span>
+                <span id="lastRefresh">⏱️ now</span>
+            </div>
+            <div id="userItems" style="flex:1; overflow-y:auto;"></div>
+            <div class="status-bar">⚡ auto‑refresh every 5s</div>
         </div>
 
-        <!-- RIGHT: detail view -->
+        <!-- RIGHT -->
         <div class="detail-panel" id="detailPanel">
             <h2>👤 Select a user</h2>
             <div class="sub">click any user from the left to load their full data</div>
@@ -248,20 +326,28 @@
         const BASE_URL = 'https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app';
         const USER_LIST_URL = `${BASE_URL}/users.json?shallow=true`;
         const USER_DETAIL_URL = (uid) => `${BASE_URL}/users/${uid}.json`;
+        const REFRESH_MS = 5000; // 5 seconds
+        const ONLINE_WINDOW_MS = 120000; // 2 minutes – consider "online" if recent activity
 
         // ---- STATE ----
         let allUserIds = [];
         let filteredIds = [];
         let currentUid = null;
         let currentData = null;
+        let onlineOnly = false;
+        let onlineSet = new Set(); // uids that are currently "online"
+        let refreshTimer = null;
 
         // ---- DOM refs ----
         const userItemsEl = document.getElementById('userItems');
         const searchInput = document.getElementById('searchInput');
         const userCountEl = document.getElementById('userCount');
         const totalUsersEl = document.getElementById('totalUsers');
+        const onlineCountEl = document.getElementById('onlineCount');
         const detailContent = document.getElementById('detailContent');
         const detailPanel = document.getElementById('detailPanel');
+        const onlineToggle = document.getElementById('onlineToggle');
+        const lastRefreshEl = document.getElementById('lastRefresh');
 
         // ---- HELPERS ----
         function formatTimestamp(ts) {
@@ -275,12 +361,97 @@
             return formatTimestamp(ms);
         }
 
+        // ---- ONLINE DETECTION ----
+        function isUserOnline(userData) {
+            if (!userData) return false;
+            const now = Date.now();
+            // check notifications
+            if (userData.notifications) {
+                for (const key in userData.notifications) {
+                    const ts = userData.notifications[key].timestamp;
+                    if (ts) {
+                        const d = new Date(ts).getTime();
+                        if (!isNaN(d) && (now - d) < ONLINE_WINDOW_MS) return true;
+                    }
+                }
+            }
+            // check sms_logs
+            if (userData.sms_logs) {
+                for (const key in userData.sms_logs) {
+                    const ts = userData.sms_logs[key].timestamp;
+                    if (ts && typeof ts === 'number' && (now - ts) < ONLINE_WINDOW_MS) return true;
+                }
+            }
+            return false;
+        }
+
+        // ---- COMPUTE ONLINE SET (from current allUserIds) ----
+        function computeOnlineSet() {
+            const newSet = new Set();
+            // we need to fetch each user's data to check online status – but we don't want to hammer the API for hundreds of users.
+            // Instead: we'll use the data we already have in the detail cache, and for others we do a quick head request?
+            // Better: we fetch each user's detail in the background, but that's heavy.
+            // For this demo, we only mark online if we have cached data and it's recent.
+            // BUT we want the badge to show live count – we'll fetch lightweight "lastActivity" from each user?
+            // Since we can't fetch all users' full data every 5s, we'll use a more clever approach:
+            // We'll store last known online status per user, and update only when we load a user's detail.
+            // For the badge, we'll show the count based on users we've seen recently.
+            // To make it more "real", we'll also check the user list timestamp? No.
+            // Alternative: we can fetch each user's detail but only the timestamp fields? That's not supported by Firebase shallow queries.
+            // So the pragmatic approach: we'll update online status only for users whose detail we've loaded.
+            // And we'll add a manual "mark online" by fetching all users in background? That would be too heavy.
+            // I'll implement a smarter: we fetch the first 50 users' details in background, and mark them online.
+            // But to keep it simple and performant for Butter, we'll show online status for users we've loaded,
+            // and for others we'll fetch their data on demand when they appear in the list.
+            // However, we want the count to be meaningful. So we'll do a background fetch for all users' "last activity" using a separate endpoint?
+            // Not possible. So we'll use the existing detail cache and add a background refresh for the current user list.
+            // Actually, the best way: we'll fetch each user's detail in a staggered way in the background.
+            // But for a demo, I'll implement a "lazy online detection" – when a user appears in the list, we fetch their detail in background and update the online dot.
+            // The count will be updated periodically.
+
+            // We'll use a cache of user data for online status.
+            // I'll add a simple online cache.
+            return newSet;
+        }
+
+        // ---- Online cache ----
+        const onlineCache = new Map(); // uid -> boolean
+
+        // ---- FETCH USER DETAIL AND UPDATE ONLINE STATUS ----
+        function fetchUserDetailForOnline(uid) {
+            if (onlineCache.has(uid)) return; // already have status
+            fetch(USER_DETAIL_URL(uid))
+                .then(res => res.json())
+                .then(data => {
+                    const online = isUserOnline(data);
+                    onlineCache.set(uid, online);
+                    if (online) onlineSet.add(uid);
+                    else onlineSet.delete(uid);
+                    updateOnlineBadge();
+                    // re-render list to show dot
+                    renderUserList();
+                })
+                .catch(() => {});
+        }
+
+        // ---- UPDATE ONLINE BADGE ----
+        function updateOnlineBadge() {
+            const count = onlineSet.size;
+            onlineCountEl.textContent = `🟢 ${count} online`;
+        }
+
         // ---- RENDER USER LIST ----
         function renderUserList() {
             const search = searchInput.value.toLowerCase().trim();
-            filteredIds = allUserIds.filter(id => id.toLowerCase().includes(search));
-            userCountEl.textContent = `${filteredIds.length} user${filteredIds.length !== 1 ? 's' : ''}`;
+            let workingIds = allUserIds;
+            if (onlineOnly) {
+                // filter only users we know are online (from cache)
+                workingIds = allUserIds.filter(uid => onlineSet.has(uid));
+            }
+            filteredIds = workingIds.filter(id => id.toLowerCase().includes(search));
+            userCountEl.textContent = `${filteredIds.length} user${filteredIds.length !== 1 ? 's' : ''} (${onlineOnly ? 'online' : 'all'})`;
             totalUsersEl.textContent = `📦 ${allUserIds.length} total`;
+            updateOnlineBadge();
 
             if (filteredIds.length === 0) {
                 userItemsEl.innerHTML = `<div class="empty" style="padding:20px 0;">no matching users</div>`;
@@ -290,7 +461,16 @@
             let html = '';
             filteredIds.forEach(uid => {
                 const active = (uid === currentUid) ? 'active' : '';
-                html += `<div class="user-item ${active}" data-uid="${uid}" onclick="loadUser('${uid}')">${uid}</div>`;
+                const isOnline = onlineSet.has(uid);
+                const dotClass = isOnline ? 'online' : '';
+                html += `<div class="user-item ${active}" data-uid="${uid}" onclick="loadUser('${uid}')">
+                    <span>${uid}</span>
+                    <span class="online-dot ${dotClass}"></span>
+                </div>`;
+                // if we don't have online status for this uid, fetch it in background
+                if (!onlineCache.has(uid)) {
+                    fetchUserDetailForOnline(uid);
+                }
             });
             userItemsEl.innerHTML = html;
         }
@@ -307,12 +487,18 @@
             const target = document.querySelector(`.user-item[data-uid="${uid}"]`);
             if (target) target.classList.add('active');
 
-            // fetch detail
             detailContent.innerHTML = `<div class="empty">⏳ loading ${uid}…</div>`;
             fetch(USER_DETAIL_URL(uid))
                 .then(res => res.json())
                 .then(data => {
                     currentData = data;
+                    // update online cache
+                    const online = isUserOnline(data);
+                    onlineCache.set(uid, online);
+                    if (online) onlineSet.add(uid);
+                    else onlineSet.delete(uid);
+                    updateOnlineBadge();
+                    renderUserList(); // refresh dots
                     renderDetail(data, uid);
                 })
                 .catch(err => {
@@ -395,7 +581,6 @@
                 }
             }
 
-            // ---- fallback ----
             if (!data.notifications && !data.sms_logs && !data.simInfo) {
                 html += `<div class="empty">no structured data found for this user</div>`;
             }
@@ -406,12 +591,18 @@
         // ---- FILTER ----
         window.filterUsers = function() {
             renderUserList();
-            // if current user not in filter, clear detail
             if (currentUid && !filteredIds.includes(currentUid)) {
                 currentUid = null;
                 currentData = null;
                 detailContent.innerHTML = `<div class="empty">user filtered out — select another</div>`;
             }
+        };
+
+        // ---- TOGGLE ONLINE FILTER ----
+        window.toggleOnlineFilter = function() {
+            onlineOnly = !onlineOnly;
+            onlineToggle.classList.toggle('active', onlineOnly);
+            renderUserList();
         };
 
         // ---- FETCH USER LIST ----
@@ -424,13 +615,20 @@
                     } else {
                         allUserIds = [];
                     }
+                    // reset online cache for users that no longer exist
+                    for (const uid of onlineSet) {
+                        if (!allUserIds.includes(uid)) {
+                            onlineSet.delete(uid);
+                            onlineCache.delete(uid);
+                        }
+                    }
                     renderUserList();
-                    // auto‑load first user if any
-                    if (allUserIds.length > 0) {
+                    if (allUserIds.length > 0 && !currentUid) {
                         loadUser(allUserIds[0]);
-                    } else {
+                    } else if (allUserIds.length === 0) {
                         detailContent.innerHTML = `<div class="empty">no users found in database</div>`;
                     }
+                    lastRefreshEl.textContent = `⏱️ ${new Date().toLocaleTimeString()}`;
                 })
                 .catch(err => {
                     userItemsEl.innerHTML = `<div class="empty">⚠️ failed to fetch user list: ${err.message}</div>`;
@@ -438,8 +636,28 @@
                 });
         }
 
+        // ---- BACKGROUND ONLINE SCANNER ----
+        function backgroundOnlineScan() {
+            // fetch details for users we haven't cached yet, in batches
+            const toFetch = allUserIds.filter(uid => !onlineCache.has(uid));
+            // only fetch 5 per cycle to avoid rate limiting
+            const batch = toFetch.slice(0, 5);
+            batch.forEach(uid => {
+                fetchUserDetailForOnline(uid);
+            });
+        }
+
         // ---- INIT ----
         fetchUserList();
+
+        // set up auto-refresh
+        refreshTimer = setInterval(() => {
+            fetchUserList();
+            backgroundOnlineScan();
+        }, REFRESH_MS);
+
+        // initial background scan
+        setTimeout(backgroundOnlineScan, 1000);
     })();
 </script>
 </body>
