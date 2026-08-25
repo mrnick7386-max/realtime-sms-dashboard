@@ -8,7 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ===== RESET & BASE ===== */
+        /* ----- RESET & BASE ----- */
         * {
             margin: 0;
             padding: 0;
@@ -22,7 +22,7 @@
             display: flex;
         }
 
-        /* ===== SIDEBAR ===== */
+        /* ----- SIDEBAR ----- */
         .sidebar {
             width: 220px;
             background: rgba(12, 18, 28, 0.95);
@@ -123,7 +123,7 @@
             background: rgba(79, 195, 247, 0.1);
         }
 
-        /* ===== MAIN CONTENT ===== */
+        /* ----- MAIN CONTENT ----- */
         .main-content {
             flex: 1;
             padding: 24px 28px;
@@ -131,7 +131,7 @@
             height: 100vh;
         }
 
-        /* ===== HEADER ===== */
+        /* ----- HEADER ----- */
         .header {
             display: flex;
             justify-content: space-between;
@@ -161,7 +161,7 @@
             background: rgba(255, 255, 255, 0.08);
         }
 
-        /* ===== STATS ROW ===== */
+        /* ----- STATS ROW ----- */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -196,7 +196,7 @@
             margin-top: 2px;
         }
 
-        /* ===== CONTENT GRID ===== */
+        /* ----- CONTENT GRID ----- */
         .content-grid {
             display: grid;
             grid-template-columns: 1fr 360px;
@@ -211,7 +211,7 @@
             }
         }
 
-        /* ===== DEVICES PANEL ===== */
+        /* ----- PANELS ----- */
         .panel {
             background: rgba(16, 24, 40, 0.6);
             border-radius: 10px;
@@ -244,7 +244,7 @@
             color: #c8d4e0;
         }
 
-        /* ===== DEVICE LIST ===== */
+        /* ----- DEVICE LIST ----- */
         .device-list {
             max-height: 400px;
             overflow-y: auto;
@@ -319,7 +319,7 @@
             border-radius: 8px;
         }
 
-        /* ===== INBOX ===== */
+        /* ----- INBOX ----- */
         .inbox-messages {
             max-height: 380px;
             overflow-y: auto;
@@ -375,7 +375,7 @@
             padding: 30px 0;
         }
 
-        /* ===== SEND SMS ===== */
+        /* ----- SEND SMS ----- */
         .send-sms-area {
             margin-top: 12px;
             padding-top: 12px;
@@ -420,7 +420,7 @@
             cursor: not-allowed;
         }
 
-        /* ===== CONNECT MODAL ===== */
+        /* ----- MODAL ----- */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -508,7 +508,7 @@
             cursor: not-allowed;
         }
 
-        /* ===== TOAST ===== */
+        /* ----- TOAST ----- */
         .toast {
             position: fixed;
             bottom: 24px;
@@ -539,7 +539,7 @@
             }
         }
 
-        /* ===== RESPONSIVE ===== */
+        /* ----- RESPONSIVE ----- */
         @media (max-width: 768px) {
             .sidebar {
                 width: 60px;
@@ -827,7 +827,6 @@
                 return;
             }
 
-            // Validate Firebase URL format
             if (!url.includes('firebaseio.com') && !url.includes('firebasedatabase.app')) {
                 showToast('Invalid Firebase URL. Must contain firebaseio.com or firebasedatabase.app', true);
                 return;
@@ -837,21 +836,17 @@
             btn.disabled = true;
             btn.textContent = 'Connecting...';
 
-            // Store the URL
             currentDbUrl = url;
 
-            // Initialize Firebase with the given URL
             try {
                 // Clean up old listeners
                 dbListeners.forEach(ref => ref.off());
                 dbListeners = [];
 
-                // Create a new Firebase app instance for this URL
                 const config = { databaseURL: url };
                 const app = firebase.initializeApp(config, 'panel_' + Date.now());
                 const database = firebase.database(app);
 
-                // Test connection by reading once
                 const usersRef = database.ref('users');
                 usersRef.once('value')
                     .then((snapshot) => {
@@ -864,13 +859,11 @@
                             renderAll();
                             setupRealTimeListeners(database);
                             updateDbList(url);
-                            btn.disabled = false;
-                            btn.textContent = 'Connect';
                         } else {
                             showToast('No data found at "users" node.', true);
-                            btn.disabled = false;
-                            btn.textContent = 'Connect';
                         }
+                        btn.disabled = false;
+                        btn.textContent = 'Connect';
                     })
                     .catch((err) => {
                         showToast('❌ Connection failed: ' + err.message, true);
@@ -892,8 +885,7 @@
         function setupRealTimeListeners(database) {
             const usersRef = database.ref('users');
 
-            // Full data load
-            const onValue = usersRef.on('value', (snapshot) => {
+            usersRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data && typeof data === 'object') {
                     allUsers = data;
@@ -902,15 +894,13 @@
             });
             dbListeners.push(usersRef);
 
-            // Child changed - detect new SMS
-            const onChildChanged = usersRef.on('child_changed', (snapshot) => {
+            usersRef.on('child_changed', (snapshot) => {
                 const key = snapshot.key;
                 const data = snapshot.val();
                 if (key && data) {
                     const oldData = allUsers[key];
                     allUsers[key] = data;
                     renderAll();
-                    // Check for new SMS on selected device
                     if (key === selectedDeviceId) {
                         const oldSmsCount = oldData?.sms_logs ? Object.keys(oldData.sms_logs).length : 0;
                         const newSmsCount = data.sms_logs ? Object.keys(data.sms_logs).length : 0;
@@ -923,8 +913,7 @@
             });
             dbListeners.push(usersRef);
 
-            // Child added
-            const onChildAdded = usersRef.on('child_added', (snapshot) => {
+            usersRef.on('child_added', (snapshot) => {
                 const key = snapshot.key;
                 const data = snapshot.val();
                 if (key && data) {
@@ -935,8 +924,7 @@
             });
             dbListeners.push(usersRef);
 
-            // Child removed
-            const onChildRemoved = usersRef.on('child_removed', (snapshot) => {
+            usersRef.on('child_removed', (snapshot) => {
                 const key = snapshot.key;
                 if (key && allUsers[key]) {
                     delete allUsers[key];
@@ -1000,7 +988,6 @@
 
             deviceListEl.innerHTML = html;
 
-            // Auto-select first device if none selected
             if (!selectedDeviceId && ids.length > 0) {
                 selectDevice(ids[0]);
             }
@@ -1097,7 +1084,6 @@
                 <span>${escapeHtml(url.substring(0, 40))}${url.length > 40 ? '...' : ''}</span>
                 <span class="status">● live</span>
             `;
-            // Remove "No saved databases" if present
             const placeholder = dbList.querySelector('.db-item');
             if (placeholder && placeholder.textContent.includes('No saved databases')) {
                 dbList.innerHTML = '';
@@ -1133,7 +1119,6 @@
                 return;
             }
 
-            // Get the device's phone number
             const user = allUsers[selectedDeviceId];
             const phone = getPhoneNumber(user);
             if (!phone) {
@@ -1141,8 +1126,6 @@
                 return;
             }
 
-            // In a real implementation, this would send via an API
-            // For demo, we'll log it and show a toast
             showToast(`📤 Sending to ${phone}: "${message}"`);
             smsInput.value = '';
             sendStatus.textContent = `✅ Sent to ${phone}`;
@@ -1156,7 +1139,7 @@
         }
 
         // ============================================================
-        // KEYBOARD SHORTCUT: Enter to send SMS
+        // KEYBOARD SHORTCUTS
         // ============================================================
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && document.activeElement === smsInput) {
