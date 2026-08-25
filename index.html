@@ -8,7 +8,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ===== RESET & BASE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -18,7 +17,6 @@
             display: flex;
         }
 
-        /* ===== SIDEBAR ===== */
         .sidebar {
             width: 240px;
             background: rgba(12, 18, 28, 0.95);
@@ -32,13 +30,7 @@
             flex-shrink: 0;
             overflow-y: auto;
         }
-        .sidebar .logo {
-            font-size: 18px;
-            font-weight: 700;
-            color: #4fc3f7;
-            margin-bottom: 20px;
-            letter-spacing: 0.5px;
-        }
+        .sidebar .logo { font-size: 18px; font-weight: 700; color: #4fc3f7; margin-bottom: 20px; }
         .sidebar .logo span { color: #6a7a8e; font-weight: 400; }
         .sidebar .nav-item {
             padding: 10px 12px;
@@ -49,17 +41,14 @@
             transition: all 0.2s;
             margin-bottom: 2px;
         }
-        .sidebar .nav-item:hover { background: rgba(79, 195, 247, 0.05); color: #c8d4e0; }
-        .sidebar .nav-item.active { background: rgba(79, 195, 247, 0.08); color: #4fc3f7; }
+        .sidebar .nav-item:hover { background: rgba(79,195,247,0.05); color: #c8d4e0; }
+        .sidebar .nav-item.active { background: rgba(79,195,247,0.08); color: #4fc3f7; }
         .sidebar .nav-item .icon { margin-right: 10px; }
-        .sidebar .nav-divider {
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
-            margin: 14px 0;
-        }
+        .sidebar .nav-divider { border-top: 1px solid rgba(255,255,255,0.04); margin: 14px 0; }
         .sidebar .db-section {
             margin-top: auto;
             padding-top: 14px;
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            border-top: 1px solid rgba(255,255,255,0.04);
         }
         .sidebar .db-section .label {
             font-size: 10px;
@@ -76,27 +65,20 @@
         }
         .sidebar .db-section .db-list .db-item {
             padding: 6px 10px;
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255,255,255,0.02);
             border-radius: 6px;
             margin-bottom: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 10px;
         }
-        .sidebar .db-section .db-list .db-item:hover { background: rgba(255, 255, 255, 0.04); }
-        .sidebar .db-section .db-list .db-item .status {
-            font-size: 8px;
-            color: #4caf50;
-        }
-        .sidebar .db-section .db-list .db-item .status.offline { color: #6a7a8e; }
+        .sidebar .db-section .db-list .db-item .status { font-size: 8px; color: #4caf50; }
         .sidebar .db-section .add-db-btn {
             width: 100%;
             padding: 8px;
-            background: rgba(79, 195, 247, 0.06);
-            border: 1px dashed rgba(79, 195, 247, 0.15);
+            background: rgba(79,195,247,0.06);
+            border: 1px dashed rgba(79,195,247,0.15);
             border-radius: 6px;
             color: #4fc3f7;
             font-size: 11px;
@@ -104,17 +86,10 @@
             transition: all 0.2s;
             margin-top: 6px;
         }
-        .sidebar .db-section .add-db-btn:hover { background: rgba(79, 195, 247, 0.1); }
+        .sidebar .db-section .add-db-btn:hover { background: rgba(79,195,247,0.1); }
 
-        /* ===== MAIN CONTENT ===== */
-        .main-content {
-            flex: 1;
-            padding: 24px 28px;
-            overflow-y: auto;
-            height: 100vh;
-        }
+        .main-content { flex: 1; padding: 24px 28px; overflow-y: auto; height: 100vh; }
 
-        /* ===== HEADER ===== */
         .header {
             display: flex;
             justify-content: space-between;
@@ -122,10 +97,9 @@
             margin-bottom: 24px;
         }
         .header h1 { font-size: 22px; font-weight: 600; color: #e8edf5; }
-        .header .actions { display: flex; gap: 10px; }
         .header .actions button {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
             color: #c8d4e0;
             padding: 6px 16px;
             border-radius: 6px;
@@ -133,9 +107,8 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .header .actions button:hover { background: rgba(255, 255, 255, 0.08); }
+        .header .actions button:hover { background: rgba(255,255,255,0.08); }
 
-        /* ===== STATS ROW ===== */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -143,24 +116,17 @@
             margin-bottom: 24px;
         }
         .stat-card {
-            background: rgba(16, 24, 40, 0.6);
+            background: rgba(16,24,40,0.6);
             border-radius: 10px;
             padding: 16px 18px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.03);
         }
         .stat-card .value { font-size: 26px; font-weight: 700; color: #e8edf5; }
         .stat-card .value.online { color: #4caf50; }
         .stat-card .value.offline { color: #6a7a8e; }
         .stat-card .value.sims { color: #4fc3f7; }
-        .stat-card .label {
-            font-size: 11px;
-            color: #6a7a8e;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            margin-top: 2px;
-        }
+        .stat-card .label { font-size: 11px; color: #6a7a8e; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 2px; }
 
-        /* ===== CONTENT GRID ===== */
         .content-grid {
             display: grid;
             grid-template-columns: 1fr 360px;
@@ -171,11 +137,10 @@
             .stats-row { grid-template-columns: repeat(2, 1fr); }
         }
 
-        /* ===== PANELS ===== */
         .panel {
-            background: rgba(16, 24, 40, 0.6);
+            background: rgba(16,24,40,0.6);
             border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.03);
             padding: 16px;
         }
         .panel .panel-header {
@@ -188,25 +153,21 @@
         .panel .panel-header .badge {
             font-size: 10px;
             color: #6a7a8e;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255,255,255,0.03);
             padding: 2px 12px;
             border-radius: 10px;
         }
-        .panel .panel-header .pick-device {
-            font-size: 11px;
-            color: #6a7a8e;
-        }
+        .panel .panel-header .pick-device { font-size: 11px; color: #6a7a8e; }
         .panel .panel-header .pick-device strong { color: #c8d4e0; }
 
-        /* ===== DEVICE LIST ===== */
         .device-list {
             max-height: 400px;
             overflow-y: auto;
             padding-right: 4px;
         }
         .device-list::-webkit-scrollbar { width: 3px; }
-        .device-list::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); border-radius: 2px; }
-        .device-list::-webkit-scrollbar-thumb { background: rgba(79, 195, 247, 0.15); border-radius: 2px; }
+        .device-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 2px; }
+        .device-list::-webkit-scrollbar-thumb { background: rgba(79,195,247,0.15); border-radius: 2px; }
 
         .device-item {
             display: flex;
@@ -219,59 +180,38 @@
             margin-bottom: 2px;
             border: 1px solid transparent;
         }
-        .device-item:hover { background: rgba(255, 255, 255, 0.02); }
-        .device-item.active {
-            background: rgba(79, 195, 247, 0.05);
-            border-color: rgba(79, 195, 247, 0.08);
-        }
-        .device-item .device-info .id {
-            font-size: 11px;
-            color: #6a7a8e;
-            font-family: monospace;
-        }
-        .device-item .device-info .phone {
-            font-size: 13px;
-            color: #c8d4e0;
-            font-weight: 500;
-        }
-        .device-item .device-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .device-item .device-status .dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            display: inline-block;
-        }
+        .device-item:hover { background: rgba(255,255,255,0.02); }
+        .device-item.active { background: rgba(79,195,247,0.05); border-color: rgba(79,195,247,0.08); }
+        .device-item .device-info .id { font-size: 11px; color: #6a7a8e; font-family: monospace; }
+        .device-item .device-info .phone { font-size: 13px; color: #c8d4e0; font-weight: 500; }
+        .device-item .device-status { display: flex; align-items: center; gap: 6px; }
+        .device-item .device-status .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
         .device-item .device-status .dot.online { background: #4caf50; }
         .device-item .device-status .dot.offline { background: #4a5a6e; }
         .device-item .device-status .battery { font-size: 10px; color: #4a5a6e; }
         .device-item .device-status .sms-count {
             font-size: 10px;
             color: #4a5a6e;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255,255,255,0.03);
             padding: 0 8px;
             border-radius: 8px;
         }
 
-        /* ===== INBOX ===== */
         .inbox-messages {
             max-height: 380px;
             overflow-y: auto;
             padding-right: 4px;
         }
         .inbox-messages::-webkit-scrollbar { width: 3px; }
-        .inbox-messages::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); border-radius: 2px; }
-        .inbox-messages::-webkit-scrollbar-thumb { background: rgba(79, 195, 247, 0.15); border-radius: 2px; }
+        .inbox-messages::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 2px; }
+        .inbox-messages::-webkit-scrollbar-thumb { background: rgba(79,195,247,0.15); border-radius: 2px; }
 
         .inbox-message {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0,0,0,0.2);
             border-radius: 6px;
             padding: 8px 12px;
             margin-bottom: 4px;
-            border-left: 2px solid rgba(79, 195, 247, 0.08);
+            border-left: 2px solid rgba(79,195,247,0.08);
         }
         .inbox-message .msg-header {
             display: flex;
@@ -283,24 +223,18 @@
         .inbox-message .msg-time { font-size: 9px; color: #4a5a6e; }
         .inbox-message .msg-body { font-size: 12px; color: #c8d4e0; word-break: break-word; }
         .inbox-message .msg-body .otp { color: #ffd54f; font-weight: 600; }
-        .inbox-placeholder {
-            text-align: center;
-            color: #4a5a6e;
-            font-size: 12px;
-            padding: 30px 0;
-        }
+        .inbox-placeholder { text-align: center; color: #4a5a6e; font-size: 12px; padding: 30px 0; }
 
-        /* ===== SEND SMS ===== */
         .send-sms-area {
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            border-top: 1px solid rgba(255,255,255,0.04);
         }
         .send-sms-area .send-row { display: flex; gap: 8px; }
         .send-sms-area input {
             flex: 1;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.04);
             border-radius: 6px;
             padding: 6px 12px;
             color: #c8d4e0;
@@ -308,10 +242,10 @@
             outline: none;
         }
         .send-sms-area input::placeholder { color: #4a5a6e; }
-        .send-sms-area input:focus { border-color: rgba(79, 195, 247, 0.15); }
+        .send-sms-area input:focus { border-color: rgba(79,195,247,0.15); }
         .send-sms-area .send-btn {
-            background: rgba(79, 195, 247, 0.1);
-            border: 1px solid rgba(79, 195, 247, 0.1);
+            background: rgba(79,195,247,0.1);
+            border: 1px solid rgba(79,195,247,0.1);
             color: #4fc3f7;
             padding: 6px 16px;
             border-radius: 6px;
@@ -320,10 +254,9 @@
             transition: all 0.2s;
             white-space: nowrap;
         }
-        .send-sms-area .send-btn:hover { background: rgba(79, 195, 247, 0.15); }
+        .send-sms-area .send-btn:hover { background: rgba(79,195,247,0.15); }
         .send-sms-area .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        /* ===== MODAL ===== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -331,7 +264,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0,0,0,0.6);
             backdrop-filter: blur(6px);
             z-index: 1000;
             justify-content: center;
@@ -344,15 +277,15 @@
             padding: 28px 32px;
             max-width: 520px;
             width: 90%;
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255,255,255,0.04);
         }
         .modal h2 { font-size: 18px; color: #e8edf5; margin-bottom: 6px; }
         .modal .sub { color: #6a7a8e; font-size: 12px; margin-bottom: 18px; }
         .modal label { font-size: 11px; color: #6a7a8e; display: block; margin-bottom: 4px; }
         .modal input, .modal select {
             width: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.04);
             border-radius: 6px;
             padding: 10px 14px;
             color: #c8d4e0;
@@ -360,7 +293,7 @@
             outline: none;
             margin-bottom: 14px;
         }
-        .modal input:focus, .modal select:focus { border-color: rgba(79, 195, 247, 0.15); }
+        .modal input:focus, .modal select:focus { border-color: rgba(79,195,247,0.15); }
         .modal .modal-actions {
             display: flex;
             gap: 10px;
@@ -375,10 +308,10 @@
             transition: all 0.2s;
         }
         .modal .modal-actions .cancel {
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255,255,255,0.04);
             color: #6a7a8e;
         }
-        .modal .modal-actions .cancel:hover { background: rgba(255, 255, 255, 0.08); }
+        .modal .modal-actions .cancel:hover { background: rgba(255,255,255,0.08); }
         .modal .modal-actions .connect {
             background: #4fc3f7;
             color: #0b0e14;
@@ -387,16 +320,15 @@
         .modal .modal-actions .connect:hover { background: #3da8e0; }
         .modal .modal-actions .connect:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* ===== TOAST ===== */
         .toast {
             position: fixed;
             bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(16, 24, 40, 0.95);
+            background: rgba(16,24,40,0.95);
             padding: 8px 20px;
             border-radius: 8px;
-            border: 1px solid rgba(79, 195, 247, 0.08);
+            border: 1px solid rgba(79,195,247,0.08);
             color: #c8d4e0;
             font-size: 12px;
             display: none;
@@ -409,7 +341,6 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .sidebar { width: 60px; padding: 16px 8px; }
             .sidebar .logo { font-size: 14px; text-align: center; }
@@ -427,79 +358,42 @@
 </head>
 <body>
 
-    <!-- ===== SIDEBAR ===== -->
     <div class="sidebar">
         <div class="logo">PD <span>Panel</span></div>
-        <div class="nav-item active">
-            <span class="icon">📊</span><span class="nav-text">Dashboard</span>
-        </div>
-        <div class="nav-item">
-            <span class="icon">📱</span><span class="nav-text">Devices</span>
-        </div>
-        <div class="nav-item">
-            <span class="icon">💬</span><span class="nav-text">Messages</span>
-        </div>
-        <div class="nav-item">
-            <span class="icon">✉️</span><span class="nav-text">Send SMS</span>
-        </div>
+        <div class="nav-item active"><span class="icon">📊</span><span class="nav-text">Dashboard</span></div>
+        <div class="nav-item"><span class="icon">📱</span><span class="nav-text">Devices</span></div>
+        <div class="nav-item"><span class="icon">💬</span><span class="nav-text">Messages</span></div>
+        <div class="nav-item"><span class="icon">✉️</span><span class="nav-text">Send SMS</span></div>
         <div class="nav-divider"></div>
         <div class="db-section">
             <div class="label">Connected Databases</div>
-            <div class="db-list" id="dbList">
-                <div class="db-item">
-                    <span>No saved databases</span>
-                </div>
-            </div>
+            <div class="db-list" id="dbList"><div class="db-item"><span>No saved databases</span></div></div>
             <button class="add-db-btn" onclick="openModal()">+ Connect to Firebase</button>
         </div>
     </div>
 
-    <!-- ===== MAIN CONTENT ===== -->
     <div class="main-content">
-
-        <!-- Header -->
         <div class="header">
             <h1>Dashboard</h1>
-            <div class="actions">
-                <button onclick="refreshData()">🔄 Refresh</button>
-            </div>
+            <div class="actions"><button onclick="refreshData()">🔄 Refresh</button></div>
         </div>
 
-        <!-- Stats -->
         <div class="stats-row">
-            <div class="stat-card">
-                <div class="value" id="totalCount">—</div>
-                <div class="label">Total</div>
-            </div>
-            <div class="stat-card">
-                <div class="value online" id="onlineCount">—</div>
-                <div class="label">Online</div>
-            </div>
-            <div class="stat-card">
-                <div class="value offline" id="offlineCount">—</div>
-                <div class="label">Offline</div>
-            </div>
-            <div class="stat-card">
-                <div class="value sims" id="simCount">—</div>
-                <div class="label">SIMs</div>
-            </div>
+            <div class="stat-card"><div class="value" id="totalCount">—</div><div class="label">Total</div></div>
+            <div class="stat-card"><div class="value online" id="onlineCount">—</div><div class="label">Online</div></div>
+            <div class="stat-card"><div class="value offline" id="offlineCount">—</div><div class="label">Offline</div></div>
+            <div class="stat-card"><div class="value sims" id="simCount">—</div><div class="label">SIMs</div></div>
         </div>
 
-        <!-- Content Grid -->
         <div class="content-grid">
-
-            <!-- Devices Panel -->
             <div class="panel">
                 <div class="panel-header">
                     <h2>📱 All Devices</h2>
                     <span class="badge" id="deviceBadge">0 devices</span>
                 </div>
-                <div class="device-list" id="deviceList">
-                    <div class="inbox-placeholder">Connect to Firebase to load devices</div>
-                </div>
+                <div class="device-list" id="deviceList"><div class="inbox-placeholder">Connect to Firebase to load devices</div></div>
             </div>
 
-            <!-- Right Panel: Messages + Send SMS -->
             <div class="panel">
                 <div class="panel-header">
                     <div>
@@ -508,10 +402,7 @@
                     </div>
                     <span class="badge" id="msgBadge">0</span>
                 </div>
-                <div class="inbox-messages" id="inboxMessages">
-                    <div class="inbox-placeholder">Select a device to view messages</div>
-                </div>
-                <!-- Send SMS -->
+                <div class="inbox-messages" id="inboxMessages"><div class="inbox-placeholder">Select a device to view messages</div></div>
                 <div class="send-sms-area">
                     <div class="send-row">
                         <input type="text" id="smsInput" placeholder="Type message to send..." disabled>
@@ -520,11 +411,9 @@
                     <div style="font-size:9px;color:#4a5a6e;margin-top:4px;" id="sendStatus">No device selected</div>
                 </div>
             </div>
-
         </div>
     </div>
 
-    <!-- ===== CONNECT MODAL ===== -->
     <div class="modal-overlay" id="connectModal">
         <div class="modal">
             <h2>🔗 Connect to Firebase</h2>
@@ -548,22 +437,18 @@
         </div>
     </div>
 
-    <!-- Toast -->
     <div class="toast" id="toast"></div>
 
     <script>
-        // ============================================================
-        // STATE
-        // ============================================================
-        let allDevices = {};          // { deviceId: { dbUrl, node, data, messages } }
+        // ===== STATE =====
+        let allDevices = {};
         let selectedDeviceId = null;
         let connectedDbs = [];
         let dbListeners = [];
         let isConnected = false;
+        let deviceCounter = 0;
 
-        // ============================================================
-        // DOM REFS
-        // ============================================================
+        // ===== DOM REFS =====
         const deviceListEl = document.getElementById('deviceList');
         const inboxMessagesEl = document.getElementById('inboxMessages');
         const selectedDeviceInfo = document.getElementById('selectedDeviceInfo');
@@ -579,9 +464,7 @@
         const sendStatus = document.getElementById('sendStatus');
         const toast = document.getElementById('toast');
 
-        // ============================================================
-        // TOAST
-        // ============================================================
+        // ===== TOAST =====
         function showToast(msg, isError = false) {
             toast.textContent = msg;
             toast.style.borderColor = isError ? 'rgba(255,80,80,0.2)' : 'rgba(79,195,247,0.08)';
@@ -590,9 +473,7 @@
             toast._timeout = setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        // ============================================================
-        // HELPERS
-        // ============================================================
+        // ===== HELPERS =====
         function parseTimestamp(ts) {
             if (!ts) return 'N/A';
             if (typeof ts === 'number') return new Date(ts).toLocaleString();
@@ -605,56 +486,42 @@
         }
 
         function isOnline(deviceData) {
-            if (deviceData === undefined || deviceData === null) return false;
-            if (typeof deviceData === 'object') {
-                if (deviceData.status !== undefined) {
-                    // Handle various status formats
-                    if (typeof deviceData.status === 'boolean') return deviceData.status === true;
-                    if (typeof deviceData.status === 'string') return deviceData.status.toLowerCase() === 'true' || deviceData.status.toLowerCase() === 'online';
-                    if (typeof deviceData.status === 'number') return deviceData.status === 1;
+            if (!deviceData || typeof deviceData !== 'object') return false;
+            if (deviceData.status !== undefined) {
+                if (typeof deviceData.status === 'boolean') return deviceData.status;
+                if (typeof deviceData.status === 'string') {
+                    return deviceData.status.toLowerCase() === 'true' || deviceData.status.toLowerCase() === 'online';
                 }
-                if (deviceData.isOnline !== undefined) {
-                    return deviceData.isOnline === true;
-                }
-                // Check for 'true' value in shallow key
-                if (deviceData === true) return true;
             }
+            if (deviceData.isOnline !== undefined) return deviceData.isOnline === true;
             return false;
         }
 
         function getPhoneNumber(deviceData) {
             if (!deviceData || typeof deviceData !== 'object') return null;
-            // Check common fields
-            const fields = ['mobNo', 'mobile', 'phone', 'phoneNumber', 'number', 'simInfo'];
+            const fields = ['mobNo', 'mobile', 'phone', 'phoneNumber', 'number'];
             for (const f of fields) {
-                if (deviceData[f]) {
-                    if (typeof deviceData[f] === 'string') return deviceData[f];
-                    if (typeof deviceData[f] === 'object' && deviceData[f].number) return deviceData[f].number;
-                }
+                if (deviceData[f]) return String(deviceData[f]);
             }
             return null;
         }
 
         function getBattery(deviceData) {
             if (!deviceData || typeof deviceData !== 'object') return 'N/A';
-            const fields = ['battery', 'batteryLevel', 'charge'];
-            for (const f of fields) {
-                if (deviceData[f] !== undefined && deviceData[f] !== null) {
-                    let val = deviceData[f];
-                    if (typeof val === 'string') {
-                        val = val.replace('%', '');
-                        const num = parseInt(val);
-                        if (!isNaN(num)) return num;
-                    }
-                    if (typeof val === 'number') return val;
+            if (deviceData.battery !== undefined) {
+                let val = deviceData.battery;
+                if (typeof val === 'string') {
+                    val = val.replace('%', '');
+                    const num = parseInt(val);
+                    if (!isNaN(num)) return num;
                 }
+                if (typeof val === 'number') return val;
             }
             return 'N/A';
         }
 
         function getSmsCount(deviceData) {
             if (!deviceData || typeof deviceData !== 'object') return 0;
-            // Check for messages array or object
             if (deviceData.messages && typeof deviceData.messages === 'object') {
                 return Object.keys(deviceData.messages).length;
             }
@@ -667,14 +534,19 @@
         function getAllMessages(deviceData) {
             if (!deviceData || typeof deviceData !== 'object') return [];
             let messages = [];
+            let source = null;
             if (deviceData.messages && typeof deviceData.messages === 'object') {
-                const entries = Object.entries(deviceData.messages);
-                entries.sort((a, b) => (b[1].timestamp || b[1].ts || 0) - (a[1].timestamp || a[1].ts || 0));
-                messages = entries.map(e => ({ id: e[0], ...e[1] }));
+                source = deviceData.messages;
+            } else if (deviceData.sms_logs && typeof deviceData.sms_logs === 'object') {
+                source = deviceData.sms_logs;
             }
-            if (deviceData.sms_logs && typeof deviceData.sms_logs === 'object') {
-                const entries = Object.entries(deviceData.sms_logs);
-                entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+            if (source) {
+                const entries = Object.entries(source);
+                entries.sort((a, b) => {
+                    const tsA = a[1]?.timestamp || a[1]?.ts || a[1]?.dateTime || 0;
+                    const tsB = b[1]?.timestamp || b[1]?.ts || b[1]?.dateTime || 0;
+                    return tsB - tsA;
+                });
                 messages = entries.map(e => ({ id: e[0], ...e[1] }));
             }
             return messages;
@@ -693,13 +565,7 @@
             return div.innerHTML;
         }
 
-        function getDeviceId(deviceData, key) {
-            return key;
-        }
-
-        // ============================================================
-        // MODAL
-        // ============================================================
+        // ===== MODAL =====
         function openModal() {
             document.getElementById('connectModal').classList.add('show');
             document.getElementById('dbUrlInput').value = '';
@@ -712,19 +578,12 @@
             document.getElementById('connectModal').classList.remove('show');
         }
 
-        // Toggle custom node input
         document.getElementById('dbNodeInput').addEventListener('change', function() {
             const custom = document.getElementById('dbCustomNode');
-            if (this.value === 'custom') {
-                custom.style.display = 'block';
-            } else {
-                custom.style.display = 'none';
-            }
+            custom.style.display = this.value === 'custom' ? 'block' : 'none';
         });
 
-        // ============================================================
-        // CONNECT DATABASE
-        // ============================================================
+        // ===== CONNECT DATABASE =====
         function connectDatabase() {
             let url = document.getElementById('dbUrlInput').value.trim();
             const auth = document.getElementById('dbAuthInput').value.trim();
@@ -738,9 +597,14 @@
                 return;
             }
 
-            // Append auth token if provided
+            // Clean URL — remove any trailing slashes and auth
+            let cleanUrl = url.split('?')[0];
+            if (cleanUrl.endsWith('/')) cleanUrl = cleanUrl.slice(0, -1);
+
+            // If auth is provided, add it to the URL for the connection
+            let fullUrl = cleanUrl;
             if (auth) {
-                url = url + '?auth=' + encodeURIComponent(auth);
+                fullUrl = cleanUrl + '?auth=' + encodeURIComponent(auth);
             }
 
             const btn = document.getElementById('connectBtn');
@@ -748,40 +612,35 @@
             btn.textContent = 'Connecting...';
 
             try {
-                // Create a unique app name for this connection
+                // Create app instance
                 const appName = 'panel_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                const config = { databaseURL: url.split('?')[0] }; // Remove auth for config
+                const config = { databaseURL: cleanUrl };
                 const app = firebase.initializeApp(config, appName);
                 const database = firebase.database(app);
 
-                // Build the reference
                 let ref = database.ref(node);
-                // If there's an auth token in the URL, it's already included
 
                 ref.once('value')
                     .then((snapshot) => {
                         const data = snapshot.val();
                         if (data && typeof data === 'object') {
-                            // Store connection info
                             const connInfo = {
                                 id: appName,
-                                url: url,
+                                url: cleanUrl,
+                                auth: auth,
                                 node: node,
                                 app: app,
                                 db: database,
                                 ref: ref
                             };
                             connectedDbs.push(connInfo);
-
-                            // Process the data based on structure
                             processDatabaseData(connInfo, data);
-
                             isConnected = true;
                             closeModal();
                             showToast('✅ Connected successfully!');
                             renderAll();
                             setupRealTimeListeners(connInfo);
-                            updateDbList(url, node, auth);
+                            updateDbList(cleanUrl, node, auth);
                         } else {
                             showToast('No data found at "' + node + '" node.', true);
                         }
@@ -802,29 +661,51 @@
             }
         }
 
-        // ============================================================
-        // PROCESS DATABASE DATA
-        // ============================================================
+        // ===== PROCESS DATA =====
         function processDatabaseData(connInfo, data) {
-            // Data can be { deviceId: { ... } } or { messageId: { ... } }
-            // We need to store devices and their messages
+            if (!data || typeof data !== 'object') return;
 
-            if (!data) return;
+            const keys = Object.keys(data);
 
-            // Check if it's a device list (keys are device IDs)
-            let deviceIds = Object.keys(data);
-
-            // If the data is a flat list of messages (like messages node)
-            // We need to handle it differently — each message has a device reference
-            if (deviceIds.length > 0) {
-                const firstKey = deviceIds[0];
+            // Case 1: Direct device list with status/battery
+            if (keys.length > 0) {
+                const firstKey = keys[0];
                 const firstVal = data[firstKey];
 
-                // If values are primitives (true) or have no 'messages' field, 
-                // treat as device list
+                // If values are objects with device properties
+                if (firstVal && typeof firstVal === 'object') {
+                    // Check if it's a device list
+                    if (firstVal.status !== undefined || firstVal.battery !== undefined || firstVal.mobNo !== undefined) {
+                        keys.forEach(id => {
+                            const deviceData = data[id];
+                            allDevices[id] = {
+                                dbUrl: connInfo.url,
+                                node: connInfo.node,
+                                data: deviceData,
+                                messages: getAllMessages(deviceData)
+                            };
+                        });
+                        return;
+                    }
+
+                    // If values are messages (have message, sender, timestamp)
+                    if (firstVal.message !== undefined || firstVal.sender !== undefined) {
+                        // Create a virtual device for this messages node
+                        const virtualId = 'msg_' + connInfo.node + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 3);
+                        allDevices[virtualId] = {
+                            dbUrl: connInfo.url,
+                            node: connInfo.node,
+                            data: { messages: data },
+                            messages: getAllMessages({ messages: data }),
+                            isVirtual: true
+                        };
+                        return;
+                    }
+                }
+
+                // If values are primitive (shallow keys) — fetch each device individually
                 if (typeof firstVal === 'boolean' || firstVal === true) {
-                    // Shallow keys — fetch each device's full data
-                    deviceIds.forEach(id => {
+                    keys.forEach(id => {
                         connInfo.ref.child(id).once('value').then((snap) => {
                             const deviceData = snap.val();
                             if (deviceData && typeof deviceData === 'object') {
@@ -840,44 +721,11 @@
                     });
                     return;
                 }
-
-                // If values are objects with 'status', 'battery', etc. — it's a device list
-                if (firstVal && typeof firstVal === 'object' && 
-                    (firstVal.status !== undefined || firstVal.battery !== undefined)) {
-                    deviceIds.forEach(id => {
-                        const deviceData = data[id];
-                        allDevices[id] = {
-                            dbUrl: connInfo.url,
-                            node: connInfo.node,
-                            data: deviceData,
-                            messages: getAllMessages(deviceData)
-                        };
-                    });
-                    renderAll();
-                    return;
-                }
-
-                // If values are objects with 'message', 'sender' — it's a messages node
-                if (firstVal && typeof firstVal === 'object' && 
-                    (firstVal.message !== undefined || firstVal.sender !== undefined)) {
-                    // Create a virtual device for this messages node
-                    const virtualId = connInfo.node + '_' + connInfo.url.substring(0, 20);
-                    allDevices[virtualId] = {
-                        dbUrl: connInfo.url,
-                        node: connInfo.node,
-                        data: { messages: data },
-                        messages: getAllMessages({ messages: data }),
-                        isVirtual: true
-                    };
-                    renderAll();
-                    return;
-                }
             }
 
-            // If we got here, treat as a single device or message list
+            // Fallback: if nothing matched, treat as a single device
             if (data.message !== undefined || data.sender !== undefined) {
-                // Single message — create a virtual device
-                const virtualId = 'msg_' + Date.now();
+                const virtualId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 3);
                 allDevices[virtualId] = {
                     dbUrl: connInfo.url,
                     node: connInfo.node,
@@ -885,14 +733,10 @@
                     messages: [{ id: '0', ...data }],
                     isVirtual: true
                 };
-                renderAll();
-                return;
             }
         }
 
-        // ============================================================
-        // REAL-TIME LISTENERS
-        // ============================================================
+        // ===== REAL-TIME LISTENERS =====
         function setupRealTimeListeners(connInfo) {
             const ref = connInfo.ref;
 
@@ -900,9 +744,8 @@
                 const key = snapshot.key;
                 const data = snapshot.val();
                 if (key && data && typeof data === 'object') {
-                    // Check if it's a device or a message
-                    if (data.status !== undefined || data.battery !== undefined) {
-                        // Device data
+                    // Check if it's a device
+                    if (data.status !== undefined || data.battery !== undefined || data.mobNo !== undefined) {
                         allDevices[key] = {
                             dbUrl: connInfo.url,
                             node: connInfo.node,
@@ -912,9 +755,8 @@
                         renderAll();
                         showToast('📱 New device: ' + key.substring(0, 12) + '...');
                     } else if (data.message !== undefined || data.sender !== undefined) {
-                        // Message data — need to find which device it belongs to
-                        // For simplicity, we'll add to a virtual device
-                        const virtualId = connInfo.node + '_' + connInfo.url.substring(0, 20);
+                        // New message — add to a virtual device
+                        const virtualId = 'msg_' + connInfo.node + '_' + connInfo.url.substring(0, 20);
                         if (!allDevices[virtualId]) {
                             allDevices[virtualId] = {
                                 dbUrl: connInfo.url,
@@ -944,12 +786,9 @@
                         allDevices[key].data = data;
                         allDevices[key].messages = getAllMessages(data);
                         renderAll();
-                        if (key === selectedDeviceId) {
-                            renderInbox();
-                        }
+                        if (key === selectedDeviceId) renderInbox();
                     } else if (data.message !== undefined || data.sender !== undefined) {
-                        // Update message in virtual device
-                        const virtualId = connInfo.node + '_' + connInfo.url.substring(0, 20);
+                        const virtualId = 'msg_' + connInfo.node + '_' + connInfo.url.substring(0, 20);
                         if (allDevices[virtualId]) {
                             allDevices[virtualId].data.messages[key] = data;
                             allDevices[virtualId].messages = getAllMessages(allDevices[virtualId].data);
@@ -975,12 +814,9 @@
             });
 
             dbListeners.push(ref);
-            console.log('✅ Real-time listeners active for: ' + connInfo.node);
         }
 
-        // ============================================================
-        // RENDER FUNCTIONS
-        // ============================================================
+        // ===== RENDER =====
         function renderAll() {
             renderDevices();
             renderInbox();
@@ -1088,20 +924,18 @@
             const ids = Object.keys(allDevices);
             let online = 0;
             let offline = 0;
-            let totalSims = 0;
 
             ids.forEach(id => {
                 const dev = allDevices[id];
                 const data = dev.data || {};
                 if (isOnline(data)) online++;
                 else offline++;
-                totalSims += 1;
             });
 
             totalCount.textContent = ids.length || '—';
             onlineCount.textContent = online || '—';
             offlineCount.textContent = offline || '—';
-            simCount.textContent = totalSims || '—';
+            simCount.textContent = ids.length || '—';
         }
 
         function updateSendSmsStatus() {
@@ -1116,9 +950,6 @@
             }
         }
 
-        // ============================================================
-        // UPDATE DB LIST IN SIDEBAR
-        // ============================================================
         function updateDbList(url, node, auth) {
             const dbItem = document.createElement('div');
             dbItem.className = 'db-item';
@@ -1134,9 +965,6 @@
             dbList.prepend(dbItem);
         }
 
-        // ============================================================
-        // REFRESH
-        // ============================================================
         function refreshData() {
             if (!isConnected) {
                 showToast('⚠️ Not connected to any database', true);
@@ -1147,9 +975,6 @@
             showToast('✅ Data refreshed');
         }
 
-        // ============================================================
-        // SEND SMS
-        // ============================================================
         function sendSms() {
             if (!selectedDeviceId || !allDevices[selectedDeviceId]) {
                 showToast('⚠️ Select a device first', true);
@@ -1174,17 +999,12 @@
             smsInput.value = '';
             sendStatus.textContent = `✅ Sent to ${phone}`;
 
-            // Here you would call your SMS API endpoint
-            // Example: fetch('/api/send-sms', { method: 'POST', body: JSON.stringify({ phone, message }) })
-
             setTimeout(() => {
                 sendStatus.textContent = `📱 Sending via: ${selectedDeviceId.substring(0, 12)}...`;
             }, 3000);
         }
 
-        // ============================================================
-        // KEYBOARD SHORTCUTS
-        // ============================================================
+        // ===== SHORTCUTS =====
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && document.activeElement === smsInput) {
                 sendSms();
@@ -1194,9 +1014,7 @@
             }
         });
 
-        // ============================================================
-        // EXPOSE GLOBALS
-        // ============================================================
+        // ===== EXPOSE =====
         window.openModal = openModal;
         window.closeModal = closeModal;
         window.connectDatabase = connectDatabase;
@@ -1204,7 +1022,7 @@
         window.refreshData = refreshData;
         window.sendSms = sendSms;
 
-        console.log('✅ PD Panel loaded — ready to connect to multiple Firebase databases.');
+        console.log('✅ PD Panel loaded');
     </script>
 </body>
 </html>
